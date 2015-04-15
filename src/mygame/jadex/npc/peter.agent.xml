@@ -1,0 +1,49 @@
+?xml version="1.0" encoding="UTF-8"?>
+<!--<H3>XML definicia agenta Jozka.</H3>-->
+<agent xmlns="http://jadex.sourceforge.net/jadex"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://jadex.sourceforge.net/jadex
+	                    http://jadex.sourceforge.net/jadex-bdi-2.4.xsd"
+       name="peter" package="mygame.jadex.npc">
+
+    <imports>
+        <!-- jadex java imports -->
+        <import>java.lang.*</import>
+        <import>java.util.logging.*</import>
+        <import>java.util.*</import>
+        <import>jadex.bridge.fipa.*</import>
+        <import>jadex.commons.*</import>
+        <!-- jakub -->
+        <import>mygame.jadex.communication.*</import>
+        <import>mygame.jadex.npc.*</import>
+        <!-- emo engine imports -->
+        <import>sk.tuke.fei.bdi.emotionalengine.component.*</import>
+        <import>sk.tuke.fei.bdi.emotionalengine.plan.*</import>
+        <import>sk.tuke.fei.bdi.emotionalengine.belief.*</import>
+        <import>sk.tuke.fei.bdi.emotionalengine.res.*</import>
+        <import>sk.tuke.fei.bdi.emotionalengine.helper.*</import>
+        <!-- JME3 imports -->
+        <import>com.jme3.math.*</import>
+
+    </imports>
+	
+    <beliefs>
+    <!-- Emotional engine belief (storing emotional engine) -->
+        <belief name="emotional_engine" class="Engine">
+            <fact>new Engine()</fact>
+        </belief>
+    </beliefs>
+    
+    <goals>
+        <performgoal name="hello">
+            <parameter name="guest" class="String">
+                <value>veronika</value>
+            </parameter>
+        </performgoal>
+    </goals>
+    <plans>
+        <plan name="speak">
+            <body class
+        </plan>
+    </plans>
+</agent>

@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+        Using jadex and jMonkey.
+-->
+<agent xmlns="http://jadex.sourceforge.net/jadex"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://jadex.sourceforge.net/jadex
+	                    http://jadex.sourceforge.net/jadex-bdi-2.3.xsd"
+       name="joey"
+       package="mygame.jadex.meeting">
+    
+    <imports>
+        <import>mygame.*</import>
+        <import>mygame.meeting.*</import>
+        <import>com.jme.math.Vector3f.*</import>
+    </imports>
+      
+    <beliefs>
+       <belief name="met" class="boolean">
+            <fact>false</fact>
+        </belief>
+        <belief name="talk" class="boolean">
+            <fact>false</fact>
+        </belief>
+        <belief name="spoken" class="boolean">
+            <fact>false</fact>
+        </belief>
+        <belief name="leave" class="boolean">
+            <fact>false</fact>
+        </belief>
+        <belief name="name" class="String">
+            <fact>new String("joey")</fact>
+        </belief>
+    </beliefs>
+    
+    <goals>
+        <achievegoal name="meet">
+            <targetcondition language="jcl">
+                $beliefbase.met == true
+            </targetcondition>
+        </achievegoal>
+        <achievegoal name="talk">
+            <targetcondition language="jcl">
+                $beliefbase.spoken == true
+            </targetcondition>
+            <!--
+            <dropcondition language="jcl">
+                $beliefbase.spoken==false
+            </dropcondition>
+            -->
+        </achievegoal>
+        <achievegoal name="leave">
+            <targetcondition language="jcl">
+                $beliefbase.leave == true
+            </targetcondition>
+        </achievegoal>  
+    </goals>
+    <plans>
+        <plan name="meet">
+            <body class="MeetPlan"/>
+            <trigger>
+                <goal ref="meet"/>
+            </trigger>
+        </plan>
+        <plan name="talk">
+            <body class="TalkPlan"/>
+            <trigger>
+                <goal ref="talk"/>
+            </trigger>
+        </plan>
+        <plan name="leave">
+            <body class="LeavePlan"/>
+            <trigger>
+                <goal ref="leave"/>
+            </trigger>
+        </plan>
+    </plans>
+    
+    <configurations>
+        <configuration name="default">
+            <goals>
+                <initialgoal ref="meet"/>
+            </goals>
+            <plans>
+                <initialplan ref="meet"/>
+            </plans>
+        </configuration>
+    </configurations>
+</agent>

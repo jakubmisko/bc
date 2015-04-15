@@ -1,0 +1,286 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--<H3>XML definicia agenta Jozka.</H3>-->
+<agent xmlns="http://jadex.sourceforge.net/jadex"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://jadex.sourceforge.net/jadex
+	                    http://jadex.sourceforge.net/jadex-bdi-2.4.xsd"
+       name="jozko" package="mygame.jadex.npc">
+
+    <imports>
+        <!-- jadex java imports -->
+        <import>java.lang.*</import>
+        <import>java.util.logging.*</import>
+        <import>java.util.*</import>
+        <import>jadex.bridge.fipa.*</import>
+        <import>jadex.commons.*</import>
+        <!-- jakub -->
+        <import>mygame.jadex.communication.*</import>
+        <import>mygame.jadex.npc.plans.*</import>
+        <!-- emo engine imports -->
+        <import>sk.tuke.fei.bdi.emotionalengine.component.*</import>
+        <import>sk.tuke.fei.bdi.emotionalengine.plan.*</import>
+        <import>sk.tuke.fei.bdi.emotionalengine.belief.*</import>
+        <import>sk.tuke.fei.bdi.emotionalengine.res.*</import>
+        <import>sk.tuke.fei.bdi.emotionalengine.helper.*</import>
+        <!-- JME3 imports -->
+        <import>com.jme3.math.*</import>
+
+    </imports>
+	
+    <beliefs>
+        <!-- emo engine -->
+        <belief name="emotional_engine" class="Engine">
+            <fact>new Engine()</fact>
+        </belief>
+        <!-- Personality beliefs -->
+        <belief name="myTemper" class="String">
+            <fact>0.1</fact>
+        </belief>
+        <belief name="myComposure" class="String">
+            <fact>0.2</fact>
+        </belief>
+        <!-- communiocation interface -->
+        <belief name="shared" class="AgentProps">
+            <fact>Communicator.INSTANCE.getAgent("jozko")</fact>
+        </belief>
+        <belief name="follow" class="Boolean">
+            <fact> false </fact>
+        </belief>
+        <belief name="nearP" class="Boolean">
+            <fact> false </fact>
+        </belief>
+        <belief name="save" class="Boolean">
+            <fact> false </fact>
+        </belief>
+        <belief name="fire" class="Boolean">
+            <fact> false </fact>
+        </belief>
+        <belief name="hp" class="Integer">
+            <fact> 100 </fact>
+        </belief>
+    </beliefs>
+
+    <!--Definicie cielov.-->
+    <goals>
+        <!--Ciel pohybu.-->
+        <achievegoal name="move_here" exported="true">
+            <parameter name="here" class="Vector3f"/>
+            <parameter name="durationTime" class="Integer"/>
+            <parameter name="emotional" class="Boolean">
+                <value>true</value>
+            </parameter>
+            <parameter name="other_desire_failure" class="String">
+                <value>(Math.random() * 0.3) + 0.6</value>
+            </parameter>
+            <parameter name="probability" class="String">
+                <value>(Math.random() * 0.5) + 0.6</value>
+            </parameter>
+            <parameter name="desirability" class="Boolean">
+                <value>(Math.random() * 0.5) + 0.6</value>
+            </parameter>
+            <!-- Personality parameters -->
+            <parameter name="temper" class="String">
+                <value> $beliefbase.myTemper </value> 
+            </parameter>
+            <parameter name="composure" class="String">      
+                <value>$beliefbase.myComposure</value>
+            </parameter>
+        </achievegoal>
+        
+        <!--Ciel zachrany agenta.-->
+        <achievegoal name="agent_saved" exported="true">
+            <creationcondition language="jcl">
+                $beliefbase.save == true
+            </creationcondition>
+        </achievegoal>
+        
+        <!--Ciel smrti agenta.-->
+        <achievegoal name="agent_died" exported="true">
+            <creationcondition language="jcl">
+                $beliefbase.hp &lt;= 0
+            </creationcondition>
+        </achievegoal>
+        
+        <!--Ciel nasledovania hraca.-->
+        <achievegoal name="follow_player" exported="true">
+            <creationcondition language="jcl">
+                $beliefbase.nearP == true
+            </creationcondition>
+            <targetcondition language="jcl">
+                $beliefbase.save == true
+            </targetcondition>
+        </achievegoal>
+        
+        <!--Ciel utekania pred ohnom.-->
+        <achievegoal name="run_from_fire" exported="true">
+            <creationcondition language="jcl">
+                $beliefbase.fire == true
+                &amp;&amp;
+                $beliefbase.follow == false
+            </creationcondition>
+            <dropcondition language="jcl">
+                $beliefbase.follow == true
+            </dropcondition>
+            <targetcondition language="jcl">
+                $beliefbase.follow == false
+            </targetcondition>
+        </achievegoal>
+       
+        <!--Ciel potulovania sa // .-->
+        <performgoal name="wander" exclude="never" exported="true" randomselection="true">
+            <dropcondition language="jcl">
+                $beliefbase.fire == true
+                ||
+                $beliefbase.follow == true
+            </dropcondition>
+        </performgoal>
+    </goals>
+    <!--Ciel ubernia zivota pri stani v ohni.-->
+    <!-- zaobstara engine a dolezity je len zivot 0 hp -->
+
+    <!--Definicie planov.-->
+    <plans>
+       
+        <!--Plan ubernia zivota pri stati v ohni
+            REMOVED
+        .-->
+
+        
+        <!--Plan smrti agenta. -->
+        <plan name="deathplan">
+            <body class="DeathPlan"/>
+            <trigger>
+                <goal ref="agent_died"/>
+            </trigger>
+        </plan>
+       
+        <!--Plan potulovania sa.-->
+        <plan name="wanderplan">
+            <body class="WanderPlan"/>
+            <trigger>
+                <goal ref="wander"/>
+            </trigger>
+        </plan>
+        
+        <!--Plan zachrany agenta.-->
+        <plan name="savedplan">
+            <body class="SavedPlan"/>
+            <trigger>
+                <goal ref="agent_saved"/>
+            </trigger>
+        </plan>
+        
+        <!--Plan animacie emocii.
+            REMOVED
+        -->
+        
+        
+        <!--Plan nasledovania hraca.-->
+        <plan name="followplan">
+            <body class="FollowPlan"/>
+            <trigger>
+                <goal ref="follow_player"/>
+            </trigger>
+        </plan>
+        
+        <!--Plan utekania pred ohnom. -->
+        <plan name="runplan">
+            <body class="RunFromFirePlan"/>
+            <trigger>
+                <goal ref="run_from_fire"/>
+            </trigger>
+        </plan>
+       
+        <plan name="moveplan">
+            <parameter name="here" class="Vector3f">
+                <goalmapping ref="move_here.here"/>
+            </parameter>
+            <parameter name="durationTime" class="int">
+                <goalmapping ref="move_here.durationTime"/>
+            </parameter>
+            <body class="MoveHerePlan"/>
+            <trigger>
+                <goal ref="move_here"/>
+            </trigger>
+        </plan>
+        
+        <plan name="cry">
+            <body class="CryPlan"/>
+            <trigger>
+                <goal ref="wander"/>
+            </trigger>
+        </plan>
+        <!--Inicializacia emocneho engineu.-->
+        <plan name="initialize_emotional_engine_plan">
+            <parameter name="gui_enabled" class="Boolean">
+                <value>true</value>
+            </parameter>
+            <parameter name="logger_enabled" class="Boolean">
+                <value>false</value>
+            </parameter>
+            <parameter name="logging_delay_millis" class="Integer">
+                <value>1000</value>
+            </parameter>
+            <parameter name="decay_time_millis" class="Integer">
+                <value>750</value>
+            </parameter>
+            <parameter name="decay_steps_to_min" class="Integer">
+                <value>20</value>
+            </parameter>
+            <parameterset name="emotional_others" class="String">
+                <!-- <value>"Rescuee2"</value>
+                <value>"Rescuee3"</value> -->
+            </parameterset>
+            <body class="InitializeEmotionalEnginePlan"/>
+        </plan>
+        <!-- Process emotional messages plan -->
+        <plan name="receive_emotional_message_service_plan">
+            <body class="ReceiveEmotionalMessageServicePlan"/>
+            <waitqueue>
+                <messageevent ref="emotional_message_receive" />
+            </waitqueue>
+        </plan>
+        <plan name="updateBeliefs">
+            <body class="UpdatePlan"/>
+            <trigger>
+                <factchanged ref="shared"/>
+            </trigger>
+        </plan>
+        <plan name="B">
+            <body class="B"/>
+        </plan>
+    </plans>
+    
+    <events>
+        <!-- Agents messages -->
+        <!-- Emotional engine message events -->
+        <messageevent name="emotional_message_send" type="fipa"  direction="send" >
+            <parameter name="performative" class="String" direction="fixed">
+                <value>SFipa.INFORM</value>
+            </parameter>
+        </messageevent>
+        <messageevent name="emotional_message_receive" type="fipa"  direction="receive" >
+            <parameter name="performative" class="String" direction="fixed">
+                <value>SFipa.INFORM</value>
+            </parameter>
+            <match>((String) $content).contains(R.MESSAGE_EMOTIONAL)</match>
+        </messageevent>
+    </events>
+    <properties>
+        <property name="debugging">false</property>
+    </properties>
+    <configurations>
+        <configuration name="default">
+            <goals>
+                <!--Vychodiskovy ciel. -->
+                <initialgoal cref="wander"/>
+            </goals>
+            
+            <plans>
+                <initialplan ref="initialize_emotional_engine_plan"/>
+                <initialplan ref="receive_emotional_message_service_plan"/>
+            </plans>
+            
+        </configuration>
+    </configurations>
+</agent>
