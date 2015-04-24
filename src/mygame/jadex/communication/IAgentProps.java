@@ -21,4 +21,6 @@ public interface IAgentProps {
     static String Follow = "follow";
     static String NearPlayer = "nearP";
     static String Location = "loc";
+    static String Walking = "walk";
+    static String ChildSafe = "child_saved";
 }

@@ -4,9 +4,11 @@
  */
 package mygame.jadex.npc.plans;
 
+import jadex.bdi.runtime.IGoal;
 import jadex.bdi.runtime.Plan;
 import mygame.jadex.communication.AgentProps;
 import mygame.jadex.communication.Casting;
+import mygame.jadex.communication.IAgentProps;
 
 /**
  *
@@ -16,15 +18,20 @@ public class FollowPlan extends Plan {
 
     @Override
     public void body() {
-        // getBeliefbase().getBelief("follow").setFact(true);
-        System.out.println("idem zatebou zatebou");
+        // getBeliefbase().getBelief("follow").setFact(true);;
         waitFor(2000);
+        
         AgentProps p = (AgentProps) getBeliefbase().getBelief("shared").getFact();
-         p.put("follow", true);
-         while(Casting.toBool(p.get("follow"))){
-             waitFor(1000);
+        p.put(IAgentProps.Walking, false);
+        //p.put(IAgentProps.Follow, true);
+        if(!Casting.toBool(p.get(IAgentProps.ChildSafe))){
+            IGoal reject = createGoal("reject_follow");
+            dispatchSubgoalAndWait(reject);
+        }
+        p.put(IAgentProps.Follow, true);
+         while(true){
+             waitFor(500);
+             System.out.println("nasledujem");
          }
-         System.out.println("[info] prestal som nasledovat");
-         passed();
     }
 }

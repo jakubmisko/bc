@@ -1,24 +1,26 @@
 package mygame;
 
-import com.jme3.animation.AnimChannel;
 import com.jme3.app.SimpleApplication;
 import com.jme3.audio.AudioNode;
+import com.jme3.bounding.BoundingBox;
 import com.jme3.bullet.BulletAppState;
 import com.jme3.bullet.PhysicsSpace;
-import com.jme3.bullet.control.BetterCharacterControl;
+import com.jme3.bullet.collision.shapes.CollisionShape;
 import com.jme3.bullet.control.RigidBodyControl;
-import com.jme3.effect.ParticleEmitter;
-import com.jme3.effect.ParticleMesh;
-import com.jme3.effect.ParticleMesh.Type;
+import com.jme3.bullet.util.CollisionShapeFactory;
+import com.jme3.collision.CollisionResults;
 import com.jme3.input.KeyInput;
+import com.jme3.input.MouseInput;
 import com.jme3.input.controls.ActionListener;
 import com.jme3.input.controls.KeyTrigger;
+import com.jme3.input.controls.MouseButtonTrigger;
 import com.jme3.light.AmbientLight;
 import com.jme3.light.DirectionalLight;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
 import com.jme3.math.Quaternion;
+import com.jme3.math.Ray;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.renderer.RenderManager;
@@ -29,6 +31,7 @@ import com.jme3.scene.Spatial;
 import com.jme3.scene.shape.Box;
 import com.jme3.scene.shape.Quad;
 import com.jme3.water.SimpleWaterProcessor;
+import java.util.ArrayList;
 import java.util.Random;
 import mygame.jadex.JadexStarter;
 import mygame.jadex.communication.AgentProps;
@@ -41,12 +44,14 @@ import mygame.jadex.communication.IAgentProps;
  */
 public class Game extends SimpleApplication implements ActionListener {
 
-    private Node cross;
+    private float hp = 100f;
+    private ArrayList<Spatial> fire;
+    private BoundingBox playerSpace;
+    private Node cross, houseNode;
     private BulletAppState bulletAppState;
     boolean w, a, s, d;
     private float time = 0.7f;
-    private Vector3f walkDirection = new Vector3f(0, 0, 0);
-    private Vector3f zeroDirection = new Vector3f(0, 0, 0);
+    private Vector3f walkDirection;
     private AudioNode audioNode;
     boolean walking = false;
     boolean meeting = true;
@@ -55,6 +60,7 @@ public class Game extends SimpleApplication implements ActionListener {
 //    private AgentProps jaimeJadex;
 //    private AgentProps joeyJadex;
     Character janko, jozko, player, benny, crow, rytier;
+    private boolean mouse;
 
     public void turnOn() {
         this.start();
@@ -112,49 +118,15 @@ public class Game extends SimpleApplication implements ActionListener {
         initFire();
         initHouse();
         initCross();
-        initJadex();
+        //initJadex();
+
     }
 
-    private void stopWalking(Character a) {
-        a.getControl().setWalkDirection(Vector3f.ZERO);
-        setAnimation(a.getAnimacia(), "Stand");
-    }
-
-    @Override
-    public void simpleUpdate(float tpf) {
-//        if(jozko.isKraca() || player.isKraca())
-//            collision(jozko, player, null);
-//        if(janko.isKraca() || player.isKraca())
-//            collision(janko, player, null);  
-
-//        walkInWorld(jozko, janko);  
-        if (Casting.toBool(com.getAgent("jozko").get(IAgentProps.Follow))) {
-            walking(jozko);
-        } else {
-             stopWalking(jozko);
-        }
-        //walking(janko);
-        //walking(benny);
-        //walking(crow);
-        //System.out.println("X: " + player.getNode().getLocalTranslation().getX());
-        //System.out.println("Z: " + player.getNode().getLocalTranslation().getZ());
-
-
-//         System.out.println("jozko "+(Vector3f) jaimeJadex.get(IAgentProps.MoveTo)+" janko "+(Vector3f)joeyJadex.get(IAgentProps.MoveTo));
-//        if ((Boolean) joeyJadex.get(IAgentProps.Leave) && (Boolean) jaimeJadex.get(IAgentProps.Leave) && 
-//                joeyJadex.get(IAgentProps.MoveTo) != null && jaimeJadex.get(IAgentProps.MoveTo) != null) {
-//            presun(jozko.getNode(), jozko.getControl(), (Vector3f) jaimeJadex.get(IAgentProps.MoveTo));
-//            System.out.println("jozko ide tu "+jaimeJadex.get(IAgentProps.MoveTo));
-//            presun(janko.getMeno(), janko.getControl(), (Vector3f)joeyJadex.get(IAgentProps.MoveTo));
-//            System.out.println("janko ide tu "+joeyJadex.get(IAgentProps.MoveTo));
-//            setAnimation(jozko.getAnimacia(), "Walk");
-//            setAnimation(janko.getAnimacia(), "Walk");
-//        }
-
-        cam.setLocation(player.getNode().getLocalTranslation().add(new Vector3f(0.0f, 1.8f, 0.0f)));
+    private void playerAction(float tpf) {
+        
+        cam.setLocation(player.getNode().getLocalTranslation().add(new Vector3f(0.0f, 2.5f, 3.0f)));
         walkDirection.set(0, 0, 0);
         time += tpf;
-
         if (a) {
             walkDirection.addLocal(cam.getLeft().mult(5f));
             if (time >= 0.7f) {
@@ -183,64 +155,107 @@ public class Game extends SimpleApplication implements ActionListener {
                 time = 0;
             }
         }
-
+        if(mouse){
+            if(!player.getAnimation().equals("UseHatchet"))
+            player.setAnimation("UseHatchet");
+        } else{
+            player.setAnimation("Stand");
+        }
+        
         walkDirection.setY(0);
         player.getControl().setWalkDirection(walkDirection);
+        player.getControl().setViewDirection(cam.getDirection());
+        // uberanie zivota
+        if (player.nearFire(3, fire)) {
+            hp -= 0.05;
+            System.out.println("hp=" + hp);
+        }
     }
 
-    /**
-     * Hlavná funkcia zabezpečujúca kráčanie postáv "a" a "b" po svete. Funkcia
-     * volá funkciu pre kolíziu postáv a funkciu zabezpečujúcu nespadnutie
-     * postáv z herného sveta. V prípade, že sa postavy "a" a "b" k sebe
-     * približia na menej ako 9 jednotiek, je ich smer nastavený tak, aby prišli
-     * k sebe a začali konvezáciu. Po konverzácií postavy môžu popri sebe
-     * prechádzať, no ďalšiu konverzáciu začnú až ked sa ich vzdialenosť zväčší
-     * na 10 jednotiek a následne zmenší pod 9 jednotiek.
-     *
-     * @param a postava
-     * @param b postava
-     */
-    private void walkInWorld(Character a, Character b) {
-        Node aNode = a.getNode();
-        Node bNode = b.getNode();
-        BetterCharacterControl aControl = a.getControl();
-        BetterCharacterControl bControl = b.getControl();
-
-        if (a.isKraca() && b.isKraca()) {
-            if (walking) {
-                walking(a);
-                walking(b);
-                meeting = false;
-            }
-            if (aNode.getWorldBound().distanceTo(bNode.getLocalTranslation()) > 10) {
-                walking = false;
-                meeting = true;
-            }
-            if (meeting) {
-                //System.out.println(a.getMeno() + ": " + bNode.getWorldBound().distanceTo(aNode.getLocalTranslation()));
-                //System.out.println(b.getMeno() + ": " + aNode.getWorldBound().distanceTo(bNode.getLocalTranslation()));
-
-                if (aNode.getWorldBound().distanceTo(bNode.getLocalTranslation()) > 9) {
-                    walking(a);
-                    walking(b);
-                } else {
-                    bControl.setViewDirection(aNode.getLocalTranslation().subtract(bNode.getLocalTranslation()));
-                    bControl.setWalkDirection(aNode.getLocalTranslation().subtract(bNode.getLocalTranslation()));
-                    aControl.setViewDirection(bNode.getLocalTranslation().subtract(aNode.getLocalTranslation()));
-                    aControl.setWalkDirection(bNode.getLocalTranslation().subtract(aNode.getLocalTranslation()));
-
-                    collision(a, b, player);
-                    collision(a, b, null);
-                }
-            }
+    @Override
+    public void simpleUpdate(float tpf) {
+        playerAction(tpf);
+        janko.walking(0.5f);
+        if (jozko.nearFire(2, fire)) {
+            jozko.runFromFire(speed);
+            hp -= 0.8;
+            System.out.println("hp jozko" + hp);
+        } else {
+            jozko.setBusy(false);
+            jozko.walking();
         }
+        //flyCam.setEnabled(true);
+//        CollisionResults results = new CollisionResults();
+//        Ray ray = new Ray(cam.getLocation(), cam.getDirection());
+//        houseNode.collideWith(ray, results);
+//        if (results.size() != 0 && results.getClosestCollision().getDistance() < 3) {
+//            System.out.println("kolizia");
+//        } else {
+//            System.out.println("vsetko dobre");
 
-        if (!aControl.getWalkDirection().equals(zeroDirection)) {
-            stayInWorld(aNode, aControl);
-        }
-        if (!bControl.getWalkDirection().equals(zeroDirection)) {
-            stayInWorld(bNode, bControl);
-        }
+
+        //jakub
+//        Vector3f jozef = jozko.getNode().getLocalTranslation();
+//        //System.out.println("[info] my position: x=" + player.getNode().getLocalTranslation().getX() + " y=" + player.getNode().getLocalTranslation().getY() + " z=" + player.getNode().getLocalTranslation().getZ());
+//        if (!jozko.isNear(player, 3) && Casting.toBool(com.getAgent("jozko").get(IAgentProps.NearPlayer))) {
+//            com.getAgent("jozko").put(IAgentProps.NearPlayer, false);
+//            com.getAgent("jozko").put(IAgentProps.Follow, false);
+//        } else if (jozef.getZ() > 11 && !Casting.toBool(com.getAgent("jozko").get(IAgentProps.Saved))) {
+//            com.getAgent("jozko").put(IAgentProps.Saved, true);
+//        } else if (Casting.toInt(com.getAgent("jozko").get(IAgentProps.Health)) == 0 && jozko.isAlive()) {
+//            com.getAgent("jozko").put(IAgentProps.Follow, false);
+//            com.getAgent("jozko").put(IAgentProps.Walking, false);
+//            jozko.setAlive(false);
+//            System.out.println("mrtvy");
+//        }
+//        if (Casting.toBool(com.getAgent("jozko").get(IAgentProps.Walking))) {
+//            walking(jozko);
+//        } else if (Casting.toBool(com.getAgent("jozko").get(IAgentProps.Follow))) {
+//            nasleduj(jozko);
+//        } else {
+//            stopWalking(jozko);
+//        }
+        //walking(janko);
+        //walking(benny);
+        //walking(crow);
+        //System.out.println("X: " + player.getNode().getLocalTranslation().getX());
+        //System.out.println("Z: " + player.getNode().getLocalTranslation().getZ());
+
+
+//         System.out.println("jozko "+(Vector3f) jaimeJadex.get(IAgentProps.MoveTo)+" janko "+(Vector3f)joeyJadex.get(IAgentProps.MoveTo));
+//        if ((Boolean) joeyJadex.get(IAgentProps.Leave) && (Boolean) jaimeJadex.get(IAgentProps.Leave) && 
+//                joeyJadex.get(IAgentProps.MoveTo) != null && jaimeJadex.get(IAgentProps.MoveTo) != null) {
+//            presun(jozko.getNode(), jozko.getControl(), (Vector3f) jaimeJadex.get(IAgentProps.MoveTo));
+//            System.out.println("jozko ide tu "+jaimeJadex.get(IAgentProps.MoveTo));
+//            presun(janko.getMeno(), janko.getControl(), (Vector3f)joeyJadex.get(IAgentProps.MoveTo));
+//            System.out.println("janko ide tu "+joeyJadex.get(IAgentProps.MoveTo));
+//            setAnimation(jozko.getAnimacia(), "Walk");
+//            setAnimation(janko.getAnimacia(), "Walk");
+//        }
+
+
+
+//        player.getNode().updateGeometricState();
+//
+//        CollisionResults results = new CollisionResults();
+//        houseNode.collideWith(player.getNode().getWorldBound(), results);
+//        if (results.size() != 0 && results.getClosestCollision().getDistance() < 2
+//                && !results.getClosestCollision().getGeometry().toString().startsWith("ID227071")
+//                && !results.getClosestCollision().getGeometry().toString().startsWith("ID226941")
+//                && !results.getClosestCollision().getGeometry().toString().startsWith("ID226201")) {
+//            System.out.println("kolizia s " + results.getClosestCollision().getGeometry().toString());
+//
+//            back = true;
+//        } else {
+//            System.out.println("vsetko dobre");
+//        }
+//        if (back) {
+//            //cam.setLocation(old);
+//            //flyCam.setEnabled(false);
+//            cam.setLocation(old);
+//            player.getControl().setWalkDirection(Vector3f.ZERO);
+//        }
+
     }
 
     /**
@@ -256,100 +271,24 @@ public class Game extends SimpleApplication implements ActionListener {
         if (c != null) {
             if (a.getNode().getWorldBound().distanceTo(b.getNode().getLocalTranslation()) < 3 && a.getNode().getWorldBound().distanceTo(c.getNode().getLocalTranslation()) < 2) {
                 //System.out.println("Konverzuje " + a.getMeno() + " a " + b.getMeno() + " a " + c.getMeno() + ".");
-                setAnimation(a.getAnimacia(), "Stand");
-                setAnimation(b.getAnimacia(), "Stand");
-                setAnimation(c.getAnimacia(), "Stand");
-                a.getControl().setWalkDirection(zeroDirection);
-                b.getControl().setWalkDirection(zeroDirection);
+                a.setAnimation("Stand");
+                b.setAnimation("Stand");
+                c.setAnimation("Stand");
+                a.getControl().setWalkDirection(Vector3f.ZERO);
+                b.getControl().setWalkDirection(Vector3f.ZERO);
                 walking = true;
                 a.doSomething();
                 b.doSomething();
             }
         } else if (a.getNode().getWorldBound().distanceTo(b.getNode().getLocalTranslation()) < 3) {
             //System.out.println("Konverzuje " + a.getMeno() + " a " + b.getMeno() + ".");
-            setAnimation(a.getAnimacia(), "Stand");
-            setAnimation(b.getAnimacia(), "Stand");
-            a.getControl().setWalkDirection(zeroDirection);
-            b.getControl().setWalkDirection(zeroDirection);
+            a.setAnimation("Stand");
+            b.setAnimation("Stand");
+            a.getControl().setWalkDirection(Vector3f.ZERO);
+            b.getControl().setWalkDirection(Vector3f.ZERO);
             walking = true;
             a.doSomething();
             b.doSomething();
-        }
-    }
-
-    /**
-     * Funkcia walking zabezpečuje náhodne kráčanie postavy po svete. Animácie
-     * sa menia iba v tom prípade, že sa zmenil stav postavy zo stojacej na
-     * kráčajúcu, respektíve naopak. Posledný príkaz znamená, že ak sa postava
-     * zastaví, nenastaví sa jej smerovanie na 0,0,0 (dopredu), ale zostane v
-     * tom smere, v ktorom sa pohybovala.
-     *
-     * @param control Control postavy,ktorá má kráčať.
-     * @param anim Premenná pre zmenu animácie postavy pri zastávení a pohnutí
-     * sa
-     */
-    private void walking(Character a) {
-        int rozsah = 500;
-        Random generate = new Random();
-        float k = generate.nextInt(rozsah);
-        float l = generate.nextInt(rozsah);
-        float x = a.getControl().getWalkDirection().getX();
-        float y = a.getControl().getWalkDirection().getY();
-        float z = a.getControl().getWalkDirection().getZ();
-        float pomx = x;
-        float pomz = z;
-
-        if (k == 10) {
-            x = 1;
-        } else if (k == 20) {
-            x = 0;
-        } else if (k == 30) {
-            x = -1;
-        }
-        if (l == 15) {
-            z = 1;
-        } else if (l == 25) {
-            z = 0;
-        } else if (l == 35) {
-            z = -1;
-        }
-        if ((pomx == 1 || pomz == 1 || pomx == -1 || pomz == -1) && (x == 0 && z == 0) && (a.getMeno().equals("Jozko") || a.getMeno().equals("Janko"))) {
-            setAnimation(a.getAnimacia(), "Stand");
-        } else if ((pomx == 0 && pomz == 0) && (x == 1 || z == 1 || x == -1 || z == -1) && (a.getMeno().equals("Jozko") || a.getMeno().equals("Janko"))) {
-            setAnimation(a.getAnimacia(), "Walk");
-        } else if ((pomx == 0 && pomz == 0) && (x == 1 || z == 1 || x == -1 || z == -1) && a.getMeno().equals("Benny")) {
-            setAnimation(a.getAnimacia(), "run");
-        } else if ((pomx == 1 || pomz == 1 || pomx == -1 || pomz == -1) && (x == 0 && z == 0) && a.getMeno().equals("Benny")) {
-            setAnimation(a.getAnimacia(), "idle");
-        }
-
-        Vector3f position = new Vector3f(x, y, z);
-        a.getControl().setWalkDirection(position);
-        if (!position.equals(new Vector3f(0, y, 0))) {
-            a.getControl().setViewDirection(position);
-        }
-    }
-
-    /**
-     * Metóda, ktorá zabezpečuje, aby postava nespadla zo sveta. Ak postava
-     * dôjde na kraj, otočí sa o 180° a pokračuje novým smerom.
-     *
-     * @param node Uzol postavy, ktorej pozícia je kontrolovaná.
-     * @param control Ovládanie postavy, ktorej má byť zmenený smer pohybu.
-     */
-    private void stayInWorld(Node node, BetterCharacterControl control) {
-        if (node.getLocalTranslation().getX() > 20) {
-            control.setWalkDirection(new Vector3f(-1, 0, 0));
-            control.setViewDirection(new Vector3f(-1, 0, 0));
-        } else if (node.getLocalTranslation().getX() < -20) {
-            control.setWalkDirection(new Vector3f(1, 0, 0));
-            control.setViewDirection(new Vector3f(1, 0, 0));
-        } else if (node.getLocalTranslation().getZ() < -20) {
-            control.setWalkDirection(new Vector3f(0, 0, 1));
-            control.setViewDirection(new Vector3f(0, 0, 1));
-        } else if (node.getLocalTranslation().getZ() > 20) {
-            control.setWalkDirection(new Vector3f(0, 0, -1));
-            control.setViewDirection(new Vector3f(0, 0, -1));
         }
     }
 
@@ -427,8 +366,11 @@ public class Game extends SimpleApplication implements ActionListener {
      * Zabezpečí inicializáciu hráča.
      */
     public void initPlayer() {
+        walkDirection = Vector3f.ZERO;
         player = new Character("Hrac");
         Node node = (Node) assetManager.loadModel("Models/player/Hero.mesh.j3o");
+        node.setName("playa");
+
         player.makeNode("Player");
         player.setNode(node);
         player.makeControl(new Vector3f(0.3f, 5f, 70f), new Vector3f(0, -80, 0));
@@ -436,6 +378,9 @@ public class Game extends SimpleApplication implements ActionListener {
         player.getControl().warp(new Vector3f(-10.0f, 0f, 0.0f));
         player.getControl().setViewDirection(walkDirection);
         getPhysicsSpace().add(player.getControl());
+        player.getNode().setModelBound(new BoundingBox());
+        player.getNode().updateModelBound();
+        node.setLocalTranslation(32f, 0f, 0f);
         rootNode.attachChild(player.getNode());
     }
 
@@ -447,12 +392,22 @@ public class Game extends SimpleApplication implements ActionListener {
         inputManager.addMapping("A", new KeyTrigger(KeyInput.KEY_A));
         inputManager.addMapping("S", new KeyTrigger(KeyInput.KEY_S));
         inputManager.addMapping("D", new KeyTrigger(KeyInput.KEY_D));
+        inputManager.addMapping("E", new KeyTrigger(KeyInput.KEY_E));
+        inputManager.addMapping("LMB",
+                new MouseButtonTrigger(MouseInput.BUTTON_LEFT));
         inputManager.addMapping("f1", new KeyTrigger(KeyInput.KEY_F1));
         inputManager.addMapping("f2", new KeyTrigger(KeyInput.KEY_F2));
         inputManager.addMapping("f3", new KeyTrigger(KeyInput.KEY_F3));
         inputManager.addMapping("f4", new KeyTrigger(KeyInput.KEY_F4));
         inputManager.addMapping("f5", new KeyTrigger(KeyInput.KEY_F5));
-        inputManager.addListener(this, new String[]{"W", "A", "S", "D", "f1", "f2", "f3", "f4", "f5"});
+        inputManager.addMapping("f6", new KeyTrigger(KeyInput.KEY_F6));
+        inputManager.addMapping("f7", new KeyTrigger(KeyInput.KEY_F7));
+        inputManager.addMapping("f8", new KeyTrigger(KeyInput.KEY_F8));
+        inputManager.addMapping("f9", new KeyTrigger(KeyInput.KEY_F9));
+        inputManager.addMapping("f10", new KeyTrigger(KeyInput.KEY_F10));
+        inputManager.addMapping("f11", new KeyTrigger(KeyInput.KEY_F11));
+        inputManager.addMapping("f12", new KeyTrigger(KeyInput.KEY_F12));
+        inputManager.addListener(this, new String[]{"W", "A", "S", "D", "E", "LMB", "f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8", "f9", "f10", "f11", "f12"});
     }
     /*
      * Priradi konkrétnemu znaku hodnotu pravda, v prípade stlačenia klávesy.
@@ -471,6 +426,19 @@ public class Game extends SimpleApplication implements ActionListener {
         if (name.equalsIgnoreCase("D")) {
             d = isPressed;
         }
+        if (name.equalsIgnoreCase("E")) {
+            if (jozko.isNear(player, 4) && !Casting.toBool(com.getAgent("jozko").get(IAgentProps.NearPlayer))
+                    && !Casting.toBool(com.getAgent("jozko").get(IAgentProps.Saved))
+                    && Casting.toInt(com.getAgent("jozko").get(IAgentProps.Health)) != 0) {
+                com.getAgent("jozko").put(IAgentProps.Walking, false);
+                com.getAgent("jozko").put(IAgentProps.NearPlayer, true);
+                System.out.println("[game] nasledujem");
+            }
+        }
+        if (name.equalsIgnoreCase("LMB")) {
+           mouse = isPressed;
+        }
+        // debug
         if (name.equalsIgnoreCase("f1")) {
             com.getAgent("jozko").put(IAgentProps.Follow, true);
             System.out.println("fko stlacene");
@@ -484,11 +452,39 @@ public class Game extends SimpleApplication implements ActionListener {
             System.out.println("fko stlacene");
         }
         if (name.equalsIgnoreCase("f4")) {
-            com.getAgent("jozko").put(IAgentProps.Health, Integer.valueOf(-1));
+            com.getAgent("jozko").put(IAgentProps.Health, Integer.valueOf(0));
             System.out.println("fko stlacene");
         }
         if (name.equalsIgnoreCase("f5")) {
             com.getAgent("jozko").put(IAgentProps.Saved, true);
+            System.out.println("fko stlacene");
+        }
+        if (name.equalsIgnoreCase("f6")) {
+            com.getAgent("jozko").put(IAgentProps.ChildSafe, true);
+            System.out.println("fko stlacene");
+        }
+        if (name.equalsIgnoreCase("f7")) {
+            com.getAgent("jozko").put(IAgentProps.Follow, false);
+            System.out.println("fko stlacene");
+        }
+        if (name.equalsIgnoreCase("f8")) {
+            com.getAgent("jozko").put(IAgentProps.NearFire, false);
+            System.out.println("fko stlacene");
+        }
+        if (name.equalsIgnoreCase("f9")) {
+            com.getAgent("jozko").put(IAgentProps.NearPlayer, false);
+            System.out.println("fko stlacene");
+        }
+        if (name.equalsIgnoreCase("f10")) {
+            com.getAgent("jozko").put(IAgentProps.Health, Integer.valueOf(100));
+            System.out.println("fko stlacene");
+        }
+        if (name.equalsIgnoreCase("f11")) {
+            com.getAgent("jozko").put(IAgentProps.Saved, false);
+            System.out.println("fko stlacene");
+        }
+        if (name.equalsIgnoreCase("f12")) {
+            com.getAgent("jozko").put(IAgentProps.ChildSafe, false);
             System.out.println("fko stlacene");
         }
     }
@@ -504,10 +500,12 @@ public class Game extends SimpleApplication implements ActionListener {
         jadexJozko.put(IAgentProps.NearFire, false);
         jadexJozko.put(IAgentProps.Saved, false);
         jadexJozko.put(IAgentProps.NearPlayer, false);
+        jadexJozko.put(IAgentProps.Walking, true);
+        jadexJozko.put(IAgentProps.ChildSafe, false);
         com.addAgent(jadexJozko);
         jozko = new Character("Jozko");
         Node node = (Node) assetManager.loadModel("Models/rescuee1/Hero.mesh.j3o");
-        node.setLocalTranslation(-20.0f, 0f, -20.0f);
+        node.setLocalTranslation(33.0f, 0f, -3.0f);
         jozko.makeNode("jozko");
         jozko.setNode(node);
         jozko.makeControl(new Vector3f(0.8f, 4f, 80f), new Vector3f(0.0f, -30f, 0.0f));
@@ -522,7 +520,7 @@ public class Game extends SimpleApplication implements ActionListener {
     public void initRescuee2() {
         janko = new Character("Janko");
         Node node = (Node) assetManager.loadModel("Models/rescuee2/Hero.mesh.j3o");
-        node.setLocalTranslation(-10.0f, 0f, -20.0f);
+        node.setLocalTranslation(35f, 0f, 5f);
         janko.makeNode("janko");
         janko.setNode(node);
         janko.makeControl(new Vector3f(0.5f, 4f, 80f), new Vector3f(0.0f, -30f, 0.0f));
@@ -561,16 +559,6 @@ public class Game extends SimpleApplication implements ActionListener {
     }
 
     /**
-     * Nastavenie animácie postavám.
-     *
-     * @param anim Postava, ktorej má byť animácia pridelená.
-     * @param type Typ animácie, ktorý má byť priradený.
-     */
-    private void setAnimation(AnimChannel anim, String type) {
-        anim.setAnim(type);
-    }
-
-    /**
      * Funkcia vytvorí vodnú plochu o veľkosti quad. Polohu vody udáva
      * water.setLocalTranslation- daný bod tvorí ľavý dolný bod vodného
      * štvoruholníka.
@@ -595,6 +583,7 @@ public class Game extends SimpleApplication implements ActionListener {
     }
 
     private void initFire() {
+        fire = new ArrayList<Spatial>();
         Material fireMat = new Material(assetManager, "Common/MatDefs/Misc/Particle.j3md");
         Fire fire1 = new Fire(fireMat, 50, 0, -2);
         Fire fire2 = new Fire(fireMat, 50, 0, -10);
@@ -618,14 +607,48 @@ public class Game extends SimpleApplication implements ActionListener {
         rootNode.attachChild(fire9.fireNode());
         rootNode.attachChild(fire10.fireNode());
         rootNode.attachChild(fire11.fireNode());
+        for (Spatial s : rootNode.getChildren()) {
+            if (s.getName() != null && s.getName().equals("Emitter")) {
+                fire.add(s);
+            }
+        }
+    }
+    /*
+     * Funkcia vloží všetky uzly budovy do zoznamu a následne vymaže tie,
+     * ktoré predstavujú dvere. Ulzy v zozname predstavujú statické body scény, 
+     * ktoré sú neprechodné (ale dá sa cez ne vidieť).
+     */
+
+    private void dontWalkCrossWalls() {
+        ArrayList walls = new ArrayList<Node>();
+        System.out.println("House ma deti: " + houseNode.getChildren().size());
+
+        for (int i = 0; i < houseNode.getChildren().size(); i++) {
+            walls.add(houseNode.getChild(i));
+        }
+
+        walls.remove(houseNode.getChild("SketchUp.011"));
+        walls.remove(houseNode.getChild("SketchUp.012"));
+        walls.remove(houseNode.getChild("SketchUp.013"));
+        walls.remove(houseNode.getChild("SketchUp.014"));
+        walls.remove(houseNode.getChild("SketchUp.015"));
+        walls.remove(houseNode.getChild("SketchUp.016"));
+        walls.remove(houseNode.getChild("SketchUp.017"));
+
+        for (int i = 0; i < walls.size(); i++) {
+            Node wallNode = (Node) walls.get(i);
+            CollisionShape houseShape = CollisionShapeFactory.createMeshShape(wallNode);
+            RigidBodyControl houseControl = new RigidBodyControl(houseShape, 0);
+            houseNode.addControl(houseControl);
+            getPhysicsSpace().add(houseControl);
+            rootNode.attachChild(houseNode);
+        }
     }
 
     public void initHouse() {
-//        Node houseNode = (Node)assetManager.loadModel("Scenes/town/dom.j3o"); 
-        Node houseNode = (Node) assetManager.loadModel("Models/newHouseDAE/newHouse.j3o");
+        houseNode = (Node) assetManager.loadModel("Models/dom/dom.j3o");
         houseNode.setName("House");
-        houseNode.scale(2.2f, 2, 2.2f);
-        houseNode.setLocalTranslation(32.0f, 0.01f, 0.0f);
+        houseNode.setLocalTranslation(31.0f, 0.05f, 0.0f);
 
         /**
          * A white, directional light source
@@ -634,7 +657,8 @@ public class Game extends SimpleApplication implements ActionListener {
         sun.setDirection((new Vector3f(0.5f, 0.5f, 0.5f)).normalizeLocal());
         sun.setColor(ColorRGBA.White);
         rootNode.addLight(sun);
-
         rootNode.attachChild(houseNode);
+
+        dontWalkCrossWalls();
     }
 }

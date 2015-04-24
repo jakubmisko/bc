@@ -19,11 +19,11 @@ public class SavedPlan extends Plan{
         System.out.println("hura som von");
         AgentProps p = (AgentProps) getBeliefbase().getBelief("shared").getFact();
         
-        p.put("follow", Boolean.FALSE);
-        
+        p.put(IAgentProps.Follow, false);
+        p.put(IAgentProps.Walking, false);
         System.out.println("stojim");
         while(true){
-            System.out.println(p.get("follow"));
+            System.out.println("tesim sa");
             waitFor(2000);
         }
        // p.put("follow", Boolean.TRUE);

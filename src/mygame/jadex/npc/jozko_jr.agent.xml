@@ -1,0 +1,132 @@
+?xml version="1.0" encoding="UTF-8"?>
+<!--<H3>XML definicia agenta stojaceho pred horiacim domom</H3>-->
+<agent xmlns="http://jadex.sourceforge.net/jadex"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://jadex.sourceforge.net/jadex
+	                    http://jadex.sourceforge.net/jadex-bdi-2.4.xsd"
+       name="peter" package="mygame.jadex.npc">
+
+    <imports>
+        <!-- jadex java imports -->
+        <import>java.lang.*</import>
+        <import>java.util.logging.*</import>
+        <import>java.util.*</import>
+        <import>jadex.bridge.fipa.*</import>
+        <import>jadex.commons.*</import>
+        <!-- jakub -->
+        <import>mygame.jadex.communication.*</import>
+        <import>mygame.jadex.npc.*</import>
+        <!-- emo engine imports -->
+        <import>sk.tuke.fei.bdi.emotionalengine.component.*</import>
+        <import>sk.tuke.fei.bdi.emotionalengine.plan.*</import>
+        <import>sk.tuke.fei.bdi.emotionalengine.belief.*</import>
+        <import>sk.tuke.fei.bdi.emotionalengine.res.*</import>
+        <import>sk.tuke.fei.bdi.emotionalengine.helper.*</import>
+        <!-- JME3 imports -->
+        <import>com.jme3.math.*</import>
+
+    </imports>
+	
+    <beliefs>
+    <!-- Emotional engine belief (storing emotional engine) -->
+        <belief name="emotional_engine" class="Engine">
+            <fact>new Engine()</fact>
+        </belief>
+        <belief name="see_fire" class="Boolean">
+            <fact>false</fact>
+        </belief>
+        <belief name="see_fire" class="Boolean">
+            <fact>false</fact>
+        </belief>
+        <belief name="see_victims" class="Boolean">
+            <fact>false</fact>
+        </belief>
+    </beliefs>
+    
+    <goals>
+        <achievegoal name="wander"  retry="true" randomselection="true">
+            <parameter name="emotional" class="Boolean">
+                <value>true</value>
+            </parameter>
+            <parameter name="other_desire_failure" class="String">
+                <value>(Math.random() * 0.3) + 0.6</value>
+            </parameter>
+            <parameter name="probability" class="String">
+                <value>(Math.random() * 0.5) + 0.6</value>
+            </parameter>
+            <parameter name="desirability" class="Boolean">
+                <value>(Math.random() * 0.5) + 0.6</value>
+            </parameter>
+            <!-- Personality parameters -->
+            <parameter name="temper" class="String">
+                <value> $beliefbase.myTemper </value> 
+            </parameter>
+            <parameter name="composure" class="String">      
+                <value>$beliefbase.myComposure</value>
+            </parameter>
+            
+            <contextcondition language="jcl">
+                $beliefbase.see_fire == false
+            </contextcondition>
+        </achievegoal>
+        <achievegoal name="observe">
+            <parameter name="emotional" class="Boolean">
+                <value>true</value>
+            </parameter>
+            <parameter name="other_desire_failure" class="String">
+                <value>(Math.random() * 0.3) + 0.6</value>
+            </parameter>
+            <parameter name="probability" class="String">
+                <value>(Math.random() * 0.5) + 0.6</value>
+            </parameter>
+            <parameter name="desirability" class="Boolean">
+                <value>(Math.random() * 0.5) + 0.6</value>
+            </parameter>
+            <!-- Personality parameters -->
+            <parameter name="temper" class="String">
+                <value> $beliefbase.myTemper </value> 
+            </parameter>
+            <parameter name="composure" class="String">      
+                <value>$beliefbase.myComposure</value>
+            </parameter>
+            <creationcodition language="jcl">
+                $beliefbase.see_fire == true
+            </creationcodition>
+            <dropcondition language="jcl">
+                $beliefbase.see_fire == false
+            </dropcondition>
+        </achievegoal>
+        <achievegoal name="fear">
+            <parameter name="emotional" class="Boolean">
+                <value>true</value>
+            </parameter>
+            <parameter name="other_desire_failure" class="String">
+                <value>(Math.random() * 0.3) + 0.6</value>
+            </parameter>
+            <parameter name="probability" class="String">
+                <value>(Math.random() * 0.5) + 0.6</value>
+            </parameter>
+            <parameter name="desirability" class="Boolean">
+                <value>(Math.random() * 0.5) + 0.6</value>
+            </parameter>
+            <!-- Personality parameters -->
+            <parameter name="temper" class="String">
+                <value> $beliefbase.myTemper </value> 
+            </parameter>
+            <parameter name="composure" class="String">      
+                <value>$beliefbase.myComposure</value>
+            </parameter>
+            <creationcodition language="jcl">
+                $beliefbase.see_fire == vicims
+            </creationcodition>
+            <dropcondition language="jcl">
+                $beliefbase.see_fire == false
+            </dropcondition>
+        </achievegoal>
+    </goals>
+    <plans>
+        <plan name="speak">
+           
+        </plan>
+    </plans>
+</agent>

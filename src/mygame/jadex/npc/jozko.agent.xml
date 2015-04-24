@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--<H3>XML definicia agenta Jozka.</H3>-->
+<!--<H3>XML definicia agenta uvezneneho v horiacom dome.</H3>-->
 <agent xmlns="http://jadex.sourceforge.net/jadex"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xsi:schemaLocation="http://jadex.sourceforge.net/jadex
@@ -55,6 +55,9 @@
         <belief name="fire" class="Boolean">
             <fact> false </fact>
         </belief>
+        <belief name="child_saved" class="Boolean">
+            <fact> false </fact>
+        </belief>
         <belief name="hp" class="Integer">
             <fact> 100 </fact>
         </belief>
@@ -63,9 +66,109 @@
     <!--Definicie cielov.-->
     <goals>
         <!--Ciel pohybu.-->
-        <achievegoal name="move_here" exported="true">
-            <parameter name="here" class="Vector3f"/>
-            <parameter name="durationTime" class="Integer"/>
+        
+        <!--Ciel zachrany agenta.-->
+        <achievegoal name="agent_saved" exported="true">
+            <parameter name="emotional" class="Boolean">
+                <value>true</value>
+            </parameter>
+            <!--
+            <parameter name="other_desire_failure" class="String">
+                <value>(Math.random() * 0.3) + 0.6</value>
+            </parameter>
+            -->
+            <parameter name="probability" class="String">
+                <value>(Math.random() * 0.5) + 0.6</value>
+            </parameter>
+            <parameter name="desirability" class="Boolean">
+                <value>(Math.random() * 0.5) + 0.6</value>
+            </parameter>
+            <creationcondition language="jcl">
+                $beliefbase.save == true
+            </creationcondition>
+        </achievegoal>
+        
+        <!--Ciel smrti agenta.-->
+        <achievegoal name="agent_died" exported="true">
+            <parameter name="emotional" class="Boolean">
+                <value>true</value>
+            </parameter>
+            <parameter name="other_desire_failure" class="String">
+                <value>(Math.random() * 0.3) + 0.1</value>
+            </parameter>
+            <parameter name="probability" class="String">
+                <value>(Math.random() * 0.5) + 0.1</value>
+            </parameter>
+            <parameter name="desirability" class="Boolean">
+                <value>(Math.random() * 0.5) + 0.1</value>
+            </parameter>
+            <creationcondition language="jcl">
+                $beliefbase.hp == 0
+            </creationcondition>
+        </achievegoal>
+        
+        <!--Ciel nasledovania hraca.-->
+        <achievegoal name="follow_player" exported="true">
+            <parameter name="emotional" class="Boolean">
+                <value>true</value>
+            </parameter>
+            <!--
+            <parameter name="other_desire_failure" class="String">
+                <value>(Math.random() * 0.3) + 0.4</value>
+            </parameter>
+            -->
+            <parameter name="probability" class="String">
+                <value>(Math.random() * 0.5) + 0.4</value>
+            </parameter>
+            <parameter name="desirability" class="Boolean">
+                <value>(Math.random() * 0.5) + 0.4</value>
+            </parameter>
+            <creationcondition language="jcl">
+                $beliefbase.nearP == true
+                &amp;&amp;
+                $beliefbase.save == false
+                &amp;&amp;
+                $beliefbase.hp != 0
+            </creationcondition>
+            <targetcondition language="jcl">
+                $beliefbase.save == true
+            </targetcondition>
+            <dropcondition language="jcl">
+                $beliefbase.nearP == false
+            </dropcondition>
+        </achievegoal>
+        
+        <!--Ciel utekania pred ohnom.-->
+        <achievegoal name="run_from_fire" exported="true">
+            <parameter name="emotional" class="Boolean">
+                <value>true</value>
+            </parameter>
+            <!--
+            <parameter name="other_desire_failure" class="String">
+                <value>(Math.random() * 0.3) + 0.6</value>
+            </parameter>
+            -->
+            <parameter name="probability" class="String">
+                <value>(Math.random() * 0.5) + 0.2</value>
+            </parameter>
+            <parameter name="desirability" class="Boolean">
+                <value>(Math.random() * 0.5) + 0.8</value>
+            </parameter>
+            <creationcondition language="jcl">
+                $beliefbase.fire == true
+                &amp;&amp;
+                $beliefbase.follow == false
+            </creationcondition>
+            <dropcondition language="jcl">
+                $beliefbase.follow == true
+            </dropcondition>
+            <targetcondition language="jcl">
+                $beliefbase.fire == false
+            </targetcondition>
+        </achievegoal>
+       
+        <!--Ciel potulovania sa // .-->
+        <achievegoal name="wander"  exported="true" randomselection="true">
             <parameter name="emotional" class="Boolean">
                 <value>true</value>
             </parameter>
@@ -78,62 +181,51 @@
             <parameter name="desirability" class="Boolean">
                 <value>(Math.random() * 0.5) + 0.6</value>
             </parameter>
-            <!-- Personality parameters -->
+            <!-- Personality parameters 
             <parameter name="temper" class="String">
                 <value> $beliefbase.myTemper </value> 
             </parameter>
             <parameter name="composure" class="String">      
                 <value>$beliefbase.myComposure</value>
             </parameter>
-        </achievegoal>
-        
-        <!--Ciel zachrany agenta.-->
-        <achievegoal name="agent_saved" exported="true">
-            <creationcondition language="jcl">
-                $beliefbase.save == true
-            </creationcondition>
-        </achievegoal>
-        
-        <!--Ciel smrti agenta.-->
-        <achievegoal name="agent_died" exported="true">
-            <creationcondition language="jcl">
-                $beliefbase.hp &lt;= 0
-            </creationcondition>
-        </achievegoal>
-        
-        <!--Ciel nasledovania hraca.-->
-        <achievegoal name="follow_player" exported="true">
-            <creationcondition language="jcl">
-                $beliefbase.nearP == true
-            </creationcondition>
-            <targetcondition language="jcl">
-                $beliefbase.save == true
-            </targetcondition>
-        </achievegoal>
-        
-        <!--Ciel utekania pred ohnom.-->
-        <achievegoal name="run_from_fire" exported="true">
-            <creationcondition language="jcl">
-                $beliefbase.fire == true
+            -->
+            <contextcondition language="jcl">
+                $beliefbase.fire == false
                 &amp;&amp;
                 $beliefbase.follow == false
-            </creationcondition>
+                &amp;&amp;
+                $beliefbase.nearP == false
+            </contextcondition>
             <dropcondition language="jcl">
-                $beliefbase.follow == true
+                $beliefbase.save == true
+                ||
+                $beliefbase.hp == 0
             </dropcondition>
+         
+        </achievegoal>
+        <achievegoal name="reject_follow">
+            <parameter name="emotional" class="Boolean">
+                <value>true</value>
+            </parameter>
+            <parameter name="probability" class="String">
+                <value>(Math.random() * 0.5) + 0.6</value>
+            </parameter>
+            <parameter name="desirability" class="Boolean">
+                <value>(Math.random() * 0.5) + 0.2</value>
+            </parameter>
+            <!--
+            <creationcondition language="jcl">
+                $beliefbase.follow == true
+                &amp;&amp;
+                $beliefbase.child_saved == false
+            </creationcondition>
+            -->
             <targetcondition language="jcl">
-                $beliefbase.follow == false
+                $beliefbase.nearP == false
+                ||
+                $beliefbase.child_saved == true
             </targetcondition>
         </achievegoal>
-       
-        <!--Ciel potulovania sa // .-->
-        <performgoal name="wander" exclude="never" exported="true" randomselection="true">
-            <dropcondition language="jcl">
-                $beliefbase.fire == true
-                ||
-                $beliefbase.follow == true
-            </dropcondition>
-        </performgoal>
     </goals>
     <!--Ciel ubernia zivota pri stani v ohni.-->
     <!-- zaobstara engine a dolezity je len zivot 0 hp -->
@@ -156,6 +248,15 @@
        
         <!--Plan potulovania sa.-->
         <plan name="wanderplan">
+            <parameter name="emotional" class="Boolean">
+                <value>true</value>
+            </parameter>
+            <parameter name="disapproval" class="String" >
+                <value>(Math.random() * 0.5) + 0.2</value>
+            </parameter>
+            <parameter name="desirability" class="String" >
+                <value>(Math.random() * 0.5) + 0.4</value>
+            </parameter>
             <body class="WanderPlan"/>
             <trigger>
                 <goal ref="wander"/>
@@ -164,6 +265,15 @@
         
         <!--Plan zachrany agenta.-->
         <plan name="savedplan">
+            <parameter name="emotional" class="Boolean">
+                <value>true</value>
+            </parameter>
+            <parameter name="approval" class="String" >
+                <value>(Math.random() * 0.5) + 0.6</value>
+            </parameter>
+            <parameter name="desirability" class="String" >
+                <value>(Math.random() * 0.5) + 0.5</value>
+            </parameter>
             <body class="SavedPlan"/>
             <trigger>
                 <goal ref="agent_saved"/>
@@ -177,6 +287,15 @@
         
         <!--Plan nasledovania hraca.-->
         <plan name="followplan">
+            <parameter name="emotional" class="Boolean">
+                <value>true</value>
+            </parameter>
+            <parameter name="approval" class="String" >
+                <value>(Math.random() * 0.5) + 0.7</value>
+            </parameter>
+            <parameter name="desirability" class="String" >
+                <value>(Math.random() * 0.5) + 0.3</value>
+            </parameter>
             <body class="FollowPlan"/>
             <trigger>
                 <goal ref="follow_player"/>
@@ -185,12 +304,21 @@
         
         <!--Plan utekania pred ohnom. -->
         <plan name="runplan">
+            <parameter name="emotional" class="Boolean">
+                <value>true</value>
+            </parameter>
+            <parameter name="disapproval" class="String" >
+                <value>(Math.random() * 0.5) + 0.6</value>
+            </parameter>
+            <parameter name="desirability" class="String" >
+                <value>(Math.random() * 0.5) + 0.6</value>
+            </parameter>
             <body class="RunFromFirePlan"/>
             <trigger>
                 <goal ref="run_from_fire"/>
             </trigger>
         </plan>
-       
+       <!--
         <plan name="moveplan">
             <parameter name="here" class="Vector3f">
                 <goalmapping ref="move_here.here"/>
@@ -203,13 +331,31 @@
                 <goal ref="move_here"/>
             </trigger>
         </plan>
-        
+        -->
         <plan name="cry">
             <body class="CryPlan"/>
             <trigger>
                 <goal ref="wander"/>
             </trigger>
         </plan>
+        <plan name="reject">
+            <parameter name="emotional" class="Boolean">
+                <value>true</value>
+            </parameter>
+            <parameter name="approval" class="String" >
+                <value>(Math.random() * 0.5) + 0.4</value>
+            </parameter>
+            <parameter name="desirability" class="String" >
+                <value>(Math.random() * 0.5) + 0.6</value>
+            </parameter>
+             <parameter name="other_agent" class="String" >
+                <value>(Math.random() * 0.5) + 0.4</value>
+            </parameter>
+            <body class="RejectPlan"/>
+            <trigger>
+                <goal ref="reject_follow"/>
+            </trigger>
+            </plan>
         <!--Inicializacia emocneho engineu.-->
         <plan name="initialize_emotional_engine_plan">
             <parameter name="gui_enabled" class="Boolean">
@@ -246,9 +392,11 @@
                 <factchanged ref="shared"/>
             </trigger>
         </plan>
+        <!--
         <plan name="B">
             <body class="B"/>
         </plan>
+        -->
     </plans>
     
     <events>

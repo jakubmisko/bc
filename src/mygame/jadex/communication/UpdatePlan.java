@@ -6,10 +6,6 @@ package mygame.jadex.communication;
 
 import jadex.bdi.runtime.IBeliefbase;
 import jadex.bdi.runtime.Plan;
-import mygame.jadex.communication.AgentProps;
-import mygame.jadex.communication.Casting;
-import mygame.jadex.communication.Communicator;
-import mygame.jadex.communication.IAgentProps;
 
 /**
  *
