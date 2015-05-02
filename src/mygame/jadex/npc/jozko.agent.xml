@@ -61,6 +61,9 @@
         <belief name="hp" class="Integer">
             <fact> 100 </fact>
         </belief>
+        <belief name="walk" class="Boolean">
+            <fact>true</fact>
+        </belief>
     </beliefs>
 
     <!--Definicie cielov.-->
@@ -147,17 +150,16 @@
             <parameter name="other_desire_failure" class="String">
                 <value>(Math.random() * 0.3) + 0.6</value>
             </parameter>
+            
             -->
             <parameter name="probability" class="String">
-                <value>(Math.random() * 0.5) + 0.2</value>
+                <value>(Math.random() * 0.5) + 0.1</value>
             </parameter>
             <parameter name="desirability" class="Boolean">
-                <value>(Math.random() * 0.5) + 0.8</value>
+                <value>(Math.random() * 0.5) + 0.4</value>
             </parameter>
             <creationcondition language="jcl">
                 $beliefbase.fire == true
-                &amp;&amp;
-                $beliefbase.follow == false
             </creationcondition>
             <dropcondition language="jcl">
                 $beliefbase.follow == true
@@ -195,6 +197,8 @@
                 $beliefbase.follow == false
                 &amp;&amp;
                 $beliefbase.nearP == false
+                &amp;&amp;
+                $beliefbase.walk == true
             </contextcondition>
             <dropcondition language="jcl">
                 $beliefbase.save == true
@@ -226,6 +230,27 @@
                 $beliefbase.child_saved == true
             </targetcondition>
         </achievegoal>
+        <performgoal name="cry">
+            <parameter name="emotional" class="Boolean">
+                <value>true</value>
+            </parameter>
+            <parameter name="probability" class="String">
+                <value>(Math.random() * 0.5) + 0.6</value>
+            </parameter>
+            <parameter name="desirability" class="Boolean">
+                <value>(Math.random() * 0.5) + 0.2</value>
+            </parameter>
+            <dropcondition language="jcl">
+                $beliefbase.nearP == true
+                ||
+                $beliefbase.fire == true
+                || 
+                $beliefbase.save == true
+                ||
+                $beliefbase.hp == 0
+            </dropcondition>
+        </performgoal>
+       
     </goals>
     <!--Ciel ubernia zivota pri stani v ohni.-->
     <!-- zaobstara engine a dolezity je len zivot 0 hp -->
@@ -311,31 +336,26 @@
                 <value>(Math.random() * 0.5) + 0.6</value>
             </parameter>
             <parameter name="desirability" class="String" >
-                <value>(Math.random() * 0.5) + 0.6</value>
+                <value>(Math.random() * 0.5) + 0.2</value>
             </parameter>
             <body class="RunFromFirePlan"/>
             <trigger>
                 <goal ref="run_from_fire"/>
             </trigger>
         </plan>
-       <!--
-        <plan name="moveplan">
-            <parameter name="here" class="Vector3f">
-                <goalmapping ref="move_here.here"/>
-            </parameter>
-            <parameter name="durationTime" class="int">
-                <goalmapping ref="move_here.durationTime"/>
-            </parameter>
-            <body class="MoveHerePlan"/>
-            <trigger>
-                <goal ref="move_here"/>
-            </trigger>
-        </plan>
-        -->
         <plan name="cry">
+            <parameter name="emotional" class="Boolean">
+                <value>true</value>
+            </parameter>
+            <parameter name="disapproval" class="String" >
+                <value>(Math.random() * 0.5) + 0.6</value>
+            </parameter>
+            <parameter name="desirability" class="String" >
+                <value>(Math.random() * 0.4) + 0.1</value>
+            </parameter>
             <body class="CryPlan"/>
             <trigger>
-                <goal ref="wander"/>
+                <goal ref="cry"/>
             </trigger>
         </plan>
         <plan name="reject">
@@ -348,15 +368,59 @@
             <parameter name="desirability" class="String" >
                 <value>(Math.random() * 0.5) + 0.6</value>
             </parameter>
-             <parameter name="other_agent" class="String" >
+            <parameter name="other_agent" class="String" >
                 <value>(Math.random() * 0.5) + 0.4</value>
             </parameter>
             <body class="RejectPlan"/>
             <trigger>
                 <goal ref="reject_follow"/>
             </trigger>
-            </plan>
-        <!--Inicializacia emocneho engineu.-->
+        </plan>
+        <!-- others plans 
+         <plan name="child_saved">
+            <parameter name="emotional" class="Boolean">
+                <value>true</value>
+            </parameter>
+            <parameter name="emotional_other" class="Boolean">
+                <value>jozko_jr</value>
+            </parameter>
+            <parameter name="emotional_other_group" class="Boolean">
+                <value>false</value>
+            </parameter>
+            <parameter name="emotional_other_plan" class="String">
+                <value>savedplan</value>
+            </parameter>
+            <parameter name="approval" class="String">
+                <value>0.4 + (Math.random() * 0.5)</value>
+            </parameter>
+            <parameter name="desirability" class="String">
+                <value>0.3</value>
+            </parameter>
+            <body/>
+        </plan>
+        <plan name="child_died">
+            <parameter name="emotional" class="Boolean">
+                <value>true</value>
+            </parameter>
+            <parameter name="emotional_other" class="Boolean">
+                <value>jozko_jr</value>
+            </parameter>
+            <parameter name="emotional_other_group" class="Boolean">
+                <value>false</value>
+            </parameter>
+            <parameter name="emotional_other_plan" class="String">
+                <value>deathplan</value>
+            </parameter>
+            <parameter name="disapproval" class="String">
+                <value>0.4 + (Math.random() * 0.5)</value>
+            </parameter>
+            <parameter name="desirability" class="String">
+                <value>0.1</value>
+            </parameter>
+            <body/>
+        </plan>
+        Inicializacia emocneho engineu.-->
+        
         <plan name="initialize_emotional_engine_plan">
             <parameter name="gui_enabled" class="Boolean">
                 <value>true</value>
@@ -374,7 +438,8 @@
                 <value>20</value>
             </parameter>
             <parameterset name="emotional_others" class="String">
-                <!-- <value>"Rescuee2"</value>
+                 <value>"jozko_jr"</value>
+               <!--
                 <value>"Rescuee3"</value> -->
             </parameterset>
             <body class="InitializeEmotionalEnginePlan"/>
@@ -392,7 +457,7 @@
                 <factchanged ref="shared"/>
             </trigger>
         </plan>
-        <!--
+        <!-- debugg
         <plan name="B">
             <body class="B"/>
         </plan>
@@ -421,7 +486,7 @@
         <configuration name="default">
             <goals>
                 <!--Vychodiskovy ciel. -->
-                <initialgoal cref="wander"/>
+                <initialgoal ref="wander"/>
             </goals>
             
             <plans>

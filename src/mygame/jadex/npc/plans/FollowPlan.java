@@ -20,18 +20,19 @@ public class FollowPlan extends Plan {
     public void body() {
         // getBeliefbase().getBelief("follow").setFact(true);;
         waitFor(2000);
-        
+
         AgentProps p = (AgentProps) getBeliefbase().getBelief("shared").getFact();
         p.put(IAgentProps.Walking, false);
         //p.put(IAgentProps.Follow, true);
-        if(!Casting.toBool(p.get(IAgentProps.ChildSafe))){
+        if (!getComponentName().endsWith("_jr") && !Casting.toBool(p.get(IAgentProps.ChildSafe))) {
             IGoal reject = createGoal("reject_follow");
             dispatchSubgoalAndWait(reject);
         }
         p.put(IAgentProps.Follow, true);
-         while(true){
-             waitFor(500);
-             System.out.println("nasledujem");
-         }
+        while (true) {
+
+            System.out.println("nasledujem #" + getComponentName());
+            waitFor(500);
+        }
     }
 }

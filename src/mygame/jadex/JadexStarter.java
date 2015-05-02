@@ -13,6 +13,7 @@ import jadex.commons.future.ThreadSuspendable;
  * Starter class for jadex agents
  */
 public class JadexStarter implements Runnable {
+    private IExternalAccess platform;
     private IComponentIdentifier[] identifiers;
     private String[] components;
     private ThreadSuspendable threadSuspendable;
@@ -23,29 +24,32 @@ public class JadexStarter implements Runnable {
         "-cli", "false",
         "-printpass", "false"
     };
-/**
- * 
- * @param components Array of paths to jadex agents which needs to be created
- */
+
+    /**
+     *
+     * @param components Array of paths to jadex agents which needs to be
+     * created
+     */
     public JadexStarter(String components[]) {
         this.components = components;
         IFuture<IExternalAccess> platformFuture = Starter.createPlatform(defaultArgs);
         threadSuspendable = new ThreadSuspendable();
-        IExternalAccess platform = platformFuture.get(threadSuspendable);
+        platform = platformFuture.get(threadSuspendable);
         System.out.println("Started platform: " + platform.getComponentIdentifier());
         cms = SServiceProvider.getService(platform.getServiceProvider(), IComponentManagementService.class, RequiredServiceInfo.SCOPE_PLATFORM).get(threadSuspendable);
     }
 
-/**
- * Method that disable jadex agent
- * @param id ID of already running agent
- */
+    /**
+     * Method that disable jadex agent
+     *
+     * @param id ID of already running agent
+     */
     public void killAgent(IComponentIdentifier id) {
         cms.destroyComponent(id);
     }
 
     /**
-     * Method that create components 
+     * Method that create components
      */
     public void run() {
         int identifier = 0;
@@ -55,5 +59,10 @@ public class JadexStarter implements Runnable {
             // 	IComponentIdentifier cid = cms.createComponent(null, component, null, null).get(threadSuspendable);
             System.out.println("Started component: " + identifiers[identifier++]);
         }
+    }
+
+    public void shutDown() {
+        platform.shutdownNFPropertyProvider();
+
     }
 }

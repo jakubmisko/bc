@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--<H3>XML definicia agenta stojaceho pred horiacim domom</H3>-->
+<agent xmlns="http://jadex.sourceforge.net/jadex"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://jadex.sourceforge.net/jadex
+	                    http://jadex.sourceforge.net/jadex-bdi-2.4.xsd"
+       name="janko" package="mygame.jadex.npc">
+
+    <imports>
+        <!-- jadex java imports -->
+        <import>java.lang.*</import>
+        <import>java.util.logging.*</import>
+        <import>java.util.*</import>
+        <import>jadex.bridge.fipa.*</import>
+        <import>jadex.commons.*</import>
+        <!-- jakub -->
+        <import>mygame.jadex.communication.*</import>
+        <import>mygame.jadex.npc.plans.*</import>
+        <!-- emo engine imports -->
+        <import>sk.tuke.fei.bdi.emotionalengine.component.*</import>
+        <import>sk.tuke.fei.bdi.emotionalengine.plan.*</import>
+        <import>sk.tuke.fei.bdi.emotionalengine.belief.*</import>
+        <import>sk.tuke.fei.bdi.emotionalengine.res.*</import>
+        <import>sk.tuke.fei.bdi.emotionalengine.helper.*</import>
+        <!-- JME3 imports -->
+        <import>com.jme3.math.*</import>
+
+    </imports>
+	
+    <beliefs>
+        <!-- Emotional engine belief (storing emotional engine) -->
+        <belief name="emotional_engine" class="Engine">
+            <fact>new Engine()</fact>
+        </belief>
+        <belief name="shared" class="AgentProps">
+            <fact>Communicator.INSTANCE.getAgent("janko")</fact>
+        </belief>
+        <belief name="fire" class="Boolean">
+            <fact>false</fact>
+        </belief>
+        <belief name="nearA" class="Boolean">
+            <fact>false</fact>
+        </belief>
+        <belief name="walk" class="Boolean">
+            <fact>false</fact>
+        </belief>
+    </beliefs>
+    <goals>
+        <achievegoal name="wander">
+            <parameter name="emotional" class="Boolean">
+                <value>true</value>
+            </parameter>
+            <parameter name="other_desire_failure" class="String">
+                <value>(Math.random() * 0.3) + 0.6</value>
+            </parameter>
+            <parameter name="probability" class="String">
+                <value>(Math.random() * 0.5) + 0.6</value>
+            </parameter>
+            <parameter name="desirability" class="Boolean">
+                <value>(Math.random() * 0.5) + 0.6</value>
+            </parameter>
+            <dropcondition language="jcl">
+                $beliefbase.fire == true
+                ||
+                $beliefbase.nearA == true
+            </dropcondition>
+            <creationcondition language="jcl">
+                $beliefbase.walk == true
+            </creationcondition>
+            
+            <targetcondition language="jcl">
+                $beliefbase.walk == false
+            </targetcondition>
+            
+        </achievegoal>
+        <achievegoal name="observe">
+            <parameter name="emotional" class="Boolean">
+                <value>true</value>
+            </parameter>
+            <parameter name="other_desire_failure" class="String">
+                <value>(Math.random() * 0.3) + 0.6</value>
+            </parameter>
+            <parameter name="probability" class="String">
+                <value>(Math.random() * 0.5) + 0.6</value>
+            </parameter>
+            <parameter name="desirability" class="Boolean">
+                <value>(Math.random() * 0.5) + 0.6</value>
+            </parameter>
+            <creationcondition language="jcl">
+                $beliefbase.fire == true
+            </creationcondition>
+            <targetcondition language="jcl">
+                $beliefbase.fire == false
+                ||
+                $beliefbase.nearA == true
+            </targetcondition>
+        </achievegoal>
+        <achievegoal name="celebrate">
+            <parameter name="emotional" class="Boolean">
+                <value>true</value>
+            </parameter>
+            <parameter name="other_desire_failure" class="String">
+                <value>(Math.random() * 0.3) + 0.6</value>
+            </parameter>
+            <parameter name="probability" class="String">
+                <value>(Math.random() * 0.5) + 0.6</value>
+            </parameter>
+            <parameter name="desirability" class="Boolean">
+                <value>(Math.random() * 0.5) + 0.6</value>
+            </parameter>
+            <creationcondition language="jcl">
+                $beliefbase.nearA == true
+            </creationcondition>
+            <dropcondition language="jcl">
+                $beliefbase.nearA == false
+            </dropcondition>
+        </achievegoal>
+    </goals>
+    <plans>
+        <plan name="observe">
+            <body class="ObservePlan"/>
+            <trigger>
+                <goal ref="observe"/>
+            </trigger>
+			
+        </plan>
+        <plan name="walk">
+            <body class="WanderPlan"/>
+            <trigger>
+                <goal ref="wander"/>
+            </trigger>
+			
+        </plan>
+        <plan name="celebrate">
+            <body class="CelebratePlan"/>
+            <trigger>
+                <goal ref="celebrate"/>
+            </trigger>
+			
+        </plan>
+        <!--Inicializacia emocneho engineu.-->
+        <plan name="initialize_emotional_engine_plan">
+            <parameter name="gui_enabled" class="Boolean">
+                <value>true</value>
+            </parameter>
+            <parameter name="logger_enabled" class="Boolean">
+                <value>false</value>
+            </parameter>
+            <parameter name="logging_delay_millis" class="Integer">
+                <value>1000</value>
+            </parameter>
+            <parameter name="decay_time_millis" class="Integer">
+                <value>750</value>
+            </parameter>
+            <parameter name="decay_steps_to_min" class="Integer">
+                <value>20</value>
+            </parameter>
+            <parameterset name="emotional_others" class="String">
+               <!-- <value>"jozko"</value>
+                
+                <value>"Rescuee3"</value> -->
+            </parameterset>
+            <body class="InitializeEmotionalEnginePlan"/>
+        </plan>
+        <!-- Process emotional messages plan -->
+        <plan name="receive_emotional_message_service_plan">
+            <body class="ReceiveEmotionalMessageServicePlan"/>
+            <waitqueue>
+                <messageevent ref="emotional_message_receive" />
+            </waitqueue>
+        </plan>
+        <plan name="updateBeliefs">
+            <body class="UpdatePlan"/>
+            <trigger>
+                <factchanged ref="shared"/>
+            </trigger>
+        </plan>
+    </plans>
+    <events>
+        <!-- Agents messages -->
+        <!-- Emotional engine message events -->
+        <messageevent name="emotional_message_send" type="fipa"  direction="send" >
+            <parameter name="performative" class="String" direction="fixed">
+                <value>SFipa.INFORM</value>
+            </parameter>
+        </messageevent>
+        <messageevent name="emotional_message_receive" type="fipa"  direction="receive" >
+            <parameter name="performative" class="String" direction="fixed">
+                <value>SFipa.INFORM</value>
+            </parameter>
+            <match>((String) $content).contains(R.MESSAGE_EMOTIONAL)</match>
+        </messageevent>
+    </events>
+    <properties>
+        <property name="debugging">false</property>
+    </properties>
+    <configurations>
+        <configuration name="default">
+            <goals>
+                <!--Vychodiskovy ciel. 
+                <initialgoal cref="wander"/>-->
+            </goals>
+            
+            <plans>
+                <initialplan ref="initialize_emotional_engine_plan"/>
+                <initialplan ref="receive_emotional_message_service_plan"/>
+            </plans>
+            
+        </configuration>
+    </configurations>
+</agent>

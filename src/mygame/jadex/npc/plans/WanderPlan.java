@@ -9,32 +9,36 @@ import jadex.bdi.runtime.IGoal;
 import jadex.bdi.runtime.Plan;
 import java.util.Random;
 import mygame.jadex.communication.AgentProps;
+import mygame.jadex.communication.Casting;
 import mygame.jadex.communication.IAgentProps;
+import sk.tuke.fei.bdi.emotionalengine.component.Engine;
+import sk.tuke.fei.bdi.emotionalengine.res.R;
 
 /**
  *
  * @author jakub
  */
-public class WanderPlan extends Plan{
+public class WanderPlan extends Plan {
+
     @Override
     public void body() {
-//        IGoal moveHere = createGoal("move_here");
-//        Vector3f here = new Vector3f(1f, 2f, 3f);
-//        moveHere.getParameter("here").setValue(here);
-//        moveHere.getParameter("currentlyFollowingPlayer").setValue(false);
-//        int a = new Random().nextInt(3) + 3;
-//        moveHere.getParameter("durationTime").setValue(Integer.valueOf(a));
-//        System.out.println("chodim chodim chodim");
-//        waitFor(2000);
-//        System.out.println("[wander] dispatched");
-//        dispatchSubgoalAndWait(moveHere);
         AgentProps p = (AgentProps) getBeliefbase().getBelief("shared").getFact();
         p.put(IAgentProps.Walking, true);
-        while(true){
-            waitFor(500);
-            System.out.println("chodim");
+        Engine e = (Engine) getBeliefbase().getBelief("emotional_engine").getFact();
+        while (true) {
+            if (e.getElement("run_from_fire", R.GOAL).getEmotion(R.FEAR).getIntensity() > 0.25
+                    && !Casting.toBool(p.get(IAgentProps.Cry))) {
+                p.put(IAgentProps.Walking, false);
+                IGoal cry = createGoal("cry");
+                dispatchTopLevelGoal(cry);
+                fail();
+                //waitFor(5000);
+            } else {
+                System.out.println("chodim #" + getComponentName());
+                waitFor(2000);
+            }
+
         }
-        
+
     }
-    
 }

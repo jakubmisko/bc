@@ -15,7 +15,7 @@ public class DeathPlan extends Plan{
 
     @Override
     public void body() {
-        System.out.println("zomrel som :(");
+        System.out.println("zomrel som :( #"+getComponentName());
         //waitFor(2000);
     }
     

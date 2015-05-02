@@ -1,0 +1,8 @@
+Material My Material : Common/MatDefs/Light/Lighting.j3md {
+     MaterialParameters {
+        DiffuseMap : Models/okoloiduci/textury/worksuit_diffuse.png
+        NormalMap : Models/okoloiduci/textury/worksuit_normals.png
+     }
+    AdditionalRenderState {
+    }
+}

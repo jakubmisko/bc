@@ -19,7 +19,7 @@ public class UpdatePlan extends Plan {
     @Override
     public void body() {
         IBeliefbase base  = getBeliefbase();
-        System.out.println("[beliefs] aktualizujem...");
+        System.out.println("[beliefs] aktualizujem...#"+getComponentName());
         agent = Communicator.INSTANCE.getAgent(getComponentName());
         String[] beliefs =  base.getBeliefNames();
         for(String name : beliefs){
