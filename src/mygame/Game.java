@@ -1,5 +1,8 @@
 package mygame;
 
+import mygame.items.Fire;
+import mygame.items.Water;
+import mygame.items.Door;
 import mygame.characters.Character;
 import com.jme3.app.SimpleApplication;
 import com.jme3.audio.AudioNode;
@@ -46,16 +49,17 @@ import mygame.characters.Player;
 import mygame.characters.Rescuee;
 import mygame.jadex.JadexStarter;
 import mygame.jadex.communication.AgentProps;
-import mygame.jadex.communication.Casting;
+import mygame.jadex.help.Casting;
 import mygame.jadex.communication.Communicator;
-import mygame.jadex.communication.IAgentProps;
+import mygame.jadex.help.IAgentProps;
 
 /**
  * @author Jakub
  */
 public class Game extends SimpleApplication implements ActionListener {
 
-    private Picture pic;
+    // private Picture pic;
+    private ArrayList<Spatial> walls;
     private ArrayList<Fire> fire;
     private ArrayList<Door> doorList;
     private Node cross, houseNode, equip;
@@ -67,11 +71,12 @@ public class Game extends SimpleApplication implements ActionListener {
     boolean meeting = true;
     private Spatial scene;
     private Communicator com;
-    private AgentProps jadexJozko, jadexJanko, jadexJozkoJr;
-    private Rescuee jozkoJr, jozko;
+    private AgentProps jadexJozko, jadexJanko, jadexJozkoJr, jadexAnka;
+    private Rescuee jozkoJr, jozko, anka;
     private Human janko;
     private Player player;
     private JadexStarter start;
+    private ArrayList<Spatial> furniture;
 
     public void turnOn() {
         this.start();
@@ -100,10 +105,48 @@ public class Game extends SimpleApplication implements ActionListener {
         guiNode.attachChild(cross);
     }
 
+    private void initFurniture() {
+        Quaternion qua = new Quaternion();
+        furniture = new ArrayList<Spatial>();
+
+        Node table = (Node) assetManager.loadModel("Models/furniture/table/Computer Table.j3o");
+        table.setLocalTranslation(43.2f, 0.05f, -3.7f);
+        table.scale(0.5f);
+        qua.fromAngleAxis(FastMath.PI / 2, new Vector3f(0, 1, 0));
+        table.setLocalRotation(qua);
+
+        Node bed = (Node) assetManager.loadModel("Models/furniture/bed/Bed.j3o");
+        bed.setLocalTranslation(48.2f, 0.7f, -14.0f);
+        qua.fromAngleAxis(-FastMath.PI / 2, new Vector3f(0, 1, 0));
+        bed.setLocalRotation(qua);
+
+        Node coffe = (Node) assetManager.loadModel("Models/furniture/cafe/Cafe Equipment.j3o");
+        coffe.setLocalTranslation(31.1f, 0.05f, -3.3f);
+        coffe.scale(4.0f);
+
+        Node lamp = (Node) assetManager.loadModel("Models/furniture/lamp/3dm-lamp2.j3o");
+        lamp.setLocalTranslation(49.0f, 0.05f, -12.0f);
+
+        Node sofa = (Node) assetManager.loadModel("Models/furniture/sofa/sofa.j3o");
+        sofa.setLocalTranslation(31.2f, 0.05f, -12.0f);
+
+        furniture.add(table);
+        furniture.add(bed);
+        furniture.add(coffe);
+        furniture.add(lamp);
+        furniture.add(sofa);
+
+        rootNode.attachChild(table);
+        rootNode.attachChild(bed);
+        rootNode.attachChild(coffe);
+        rootNode.attachChild(lamp);
+        rootNode.attachChild(sofa);
+    }
+
     public void initJadex() {
 
-        String[] agents = {"mygame/jadex/npc/jozko.agent.xml", /*"mygame/jadex/npc/jozko_jr.agent.xml",*/
-            "mygame/jadex/npc/janko.agent.xml"};
+        String[] agents = {"mygame/jadex/npc/jozko.agent.xml", "mygame/jadex/npc/jozko_jr.agent.xml",
+            "mygame/jadex/npc/janko.agent.xml", "mygame/jadex/npc/anka.agent.xml"};
         //agents[0] = "mygame/jadex/meeting/jaime.agent.xml";
         //agents[1] = "mygame/jadex/meeting/joey.agent.xml";
         start = new JadexStarter(agents);
@@ -122,7 +165,9 @@ public class Game extends SimpleApplication implements ActionListener {
                     Door door = doorList.get(i);
                     //if(player.compare(player.getNode().getLocalTranslation(), door.getDoorNode().getLocalTranslation(), 2))
                     if (player.getNode().getLocalTranslation().distance(door.getDoorNode().getLocalTranslation()) < 2
-                            || jozko.getNode().getLocalTranslation().distance(door.getDoorNode().getLocalTranslation()) < 2 /*|| jozkoJr.getNode().getLocalTranslation().distance(door.getDoorNode().getLocalTranslation()) < 2*/) {
+                            || jozko.getNode().getLocalTranslation().distance(door.getDoorNode().getLocalTranslation()) < 2
+                            || jozkoJr.getNode().getLocalTranslation().distance(door.getDoorNode().getLocalTranslation()) < 2
+                            || anka.getNode().getLocalTranslation().distance(door.getDoorNode().getLocalTranslation()) < 2) {
                         if (door.getAnim().equals("Closed")) {
                             door.setAnim("Opening");
                         } else if (door.getAnim().equals("Opening")) {
@@ -137,6 +182,7 @@ public class Game extends SimpleApplication implements ActionListener {
                 }
             }
         };
+
         doorThread.start();
 
     }
@@ -168,7 +214,7 @@ public class Game extends SimpleApplication implements ActionListener {
         initLight();
         //flyCam.setMoveSpeed(50f);
         initScene();
-
+        initFurniture();
         initInput();
         initAudio();
         addDoor();
@@ -180,16 +226,26 @@ public class Game extends SimpleApplication implements ActionListener {
         initJozko();
         initJozkoJr();
         initJanko();
+        initAnka();
         // jadex posledny
-        initJadex();
+        // initJadex();
     }
 
     @Override
     public void simpleUpdate(float tpf) {
         player.action();
-        jozko.action();
-        jozkoJr.action();
-        janko.action();
+        jozko.walking();
+        /*
+        for(Spatial wall : walls){
+
+            System.out.println(wall.getLocalTranslation());
+        }
+        */
+         jozko.action();
+         jozkoJr.action();
+         janko.action();
+         anka.action();
+
         openDoor();
     }
 
@@ -287,13 +343,13 @@ public class Game extends SimpleApplication implements ActionListener {
         //equip.setLocalTranslation(10, 10, 10);
         Quaternion roll180 = new Quaternion();
         roll180.fromAngleAxis(FastMath.PI / 2, new Vector3f(0, 1, 0));
-        pic = new Picture("axe");
-        pic.setImage(assetManager, "Models/FireAxe.png", true);
-        pic.setWidth(settings.getWidth() / 2);
-        pic.setHeight(settings.getHeight() / 2);
-        pic.setPosition(settings.getWidth() / 2, -10);
-        //pic.setLocalRotation(pic.getLocalRotation().multLocal(roll180));
-        guiNode.attachChild(pic);
+//        pic = new Picture("axe");
+//        pic.setImage(assetManager, "Models/FireAxe.png", true);
+//        pic.setWidth(settings.getWidth() / 2);
+//        pic.setHeight(settings.getHeight() / 2);
+//        pic.setPosition(settings.getWidth() / 2, -10);
+//        //pic.setLocalRotation(pic.getLocalRotation().multLocal(roll180));
+//        guiNode.attachChild(pic);
 
     }
 
@@ -341,22 +397,33 @@ public class Game extends SimpleApplication implements ActionListener {
             player.setD(isPressed);
         }
         if (name.equalsIgnoreCase("E")) {
-            if (jozko.isNear(player, 4) && !Casting.toBool(com.getAgent("jozko").get(IAgentProps.NearPlayer))
-                    && !Casting.toBool(com.getAgent("jozko").get(IAgentProps.Saved))
-                    && Casting.toInt(com.getAgent("jozko").get(IAgentProps.Health)) != 0) {
+            if (jozko.isNear(player, 4) && !Casting.toBool(jadexJozko.get(IAgentProps.NearPlayer))
+                    && !Casting.toBool(jadexJozko.get(IAgentProps.Saved))
+                    && Casting.toInt(jadexJozko.get(IAgentProps.Health)) != 0) {
                 jozko.stopWalking();
-                com.getAgent("jozko").put(IAgentProps.Walking, false);
-                com.getAgent("jozko").put(IAgentProps.NearPlayer, true);
+                jadexJozko.put(IAgentProps.Walking, false);
+                jadexJozko.put(IAgentProps.NearPlayer, true);
+            } else if (jozkoJr.isNear(player, 4) && !Casting.toBool(jadexJozkoJr.get(IAgentProps.NearPlayer))
+                    && !Casting.toBool(jadexJozkoJr.get(IAgentProps.Saved))
+                    && Casting.toInt(jadexJozkoJr.get(IAgentProps.Health)) != 0) {
+                jozkoJr.stopWalking();
+                jadexJozkoJr.put(IAgentProps.Walking, false);
+                jadexJozkoJr.put(IAgentProps.NearPlayer, true);
+            } else if (anka.isNear(player, 4) && !Casting.toBool(jadexAnka.get(IAgentProps.NearPlayer))
+                    && !Casting.toBool(jadexAnka.get(IAgentProps.Saved))
+                    && Casting.toInt(jadexAnka.get(IAgentProps.Health)) != 0) {
+                anka.stopWalking();
+                jadexAnka.put(IAgentProps.Walking, false);
+                jadexAnka.put(IAgentProps.NearPlayer, true);
             }
         }
         if (name.equalsIgnoreCase("LMB")) {
-            System.out.println(player.getNode().getLocalTranslation());
-            extinguish(10);
+            //System.out.println(player.getNode().getLocalTranslation());
+            extinguish(5);
         }
         // debug
         if (name.equalsIgnoreCase("f1")) {
-            jadexJanko.put(IAgentProps.NearAgent, true);
-            System.out.println("fko stlacene");
+            System.out.println("player : " + player.getNode().getLocalTranslation().toString());
         }
         if (name.equalsIgnoreCase("f2")) {
             jadexJozko.put(IAgentProps.NearFire, true);
@@ -407,15 +474,42 @@ public class Game extends SimpleApplication implements ActionListener {
     /*
      * Funkcia na vytvorenie postavy.
      */
+    public void initAnka() {
+        //jadex
+        jadexAnka = new AgentProps("anka");
+        jadexAnka.put(IAgentProps.Health, Integer.valueOf(100));
+        jadexAnka.put(IAgentProps.Speed, Float.valueOf(1));
+        jadexAnka.put(IAgentProps.Follow, false);
+        jadexAnka.put(IAgentProps.NearFire, false);
+        jadexAnka.put(IAgentProps.Saved, false);
+        jadexAnka.put(IAgentProps.NearPlayer, false);
+        jadexAnka.put(IAgentProps.Walking, true);
+        jadexAnka.put(IAgentProps.ChildSafe, false);
+        jadexAnka.put(IAgentProps.Cry, false);
+        com.addAgent(jadexAnka);
+        anka = new Rescuee("anka", jadexAnka);
+        Node node = (Node) assetManager.loadModel("Models/mum/mother_Low-Poly.mesh.j3o");
+        node.setLocalTranslation(34.0f, 0f, -19.0f);
+        node.setLocalScale(0.15f);
+        anka.setNode(node);
+        anka.makeControl(new Vector3f(0.8f, 4f, 80f), new Vector3f(0.0f, -30f, 0.0f));
+        anka.makeAnimation("stand");
+        anka.setHp(100f);
+        anka.setFire(fire);
+        anka.setGui(guiNode);
+        anka.setPlayer(player);
+        getPhysicsSpace().add(anka.getControl());
+        rootNode.attachChild(anka.getNode());
+    }
+    /*
+     * Funkcia na vytvorenie postavy.
+     */
+
     public void initJozko() {
         //jadex
-        BitmapText hp = new BitmapText(guiFont);
-        hp.setName("player");
-        hp.setText("100%");
-        hp.setLocalTranslation(25, 25, 0);
         jadexJozko = new AgentProps("jozko");
-        guiNode.attachChild(hp);
         jadexJozko.put(IAgentProps.Health, Integer.valueOf(100));
+        jadexJozko.put(IAgentProps.Speed, Float.valueOf(1));
         jadexJozko.put(IAgentProps.Follow, false);
         jadexJozko.put(IAgentProps.NearFire, false);
         jadexJozko.put(IAgentProps.Saved, false);
@@ -425,16 +519,18 @@ public class Game extends SimpleApplication implements ActionListener {
         jadexJozko.put(IAgentProps.Cry, false);
         com.addAgent(jadexJozko);
         jozko = new Rescuee("Jozko", jadexJozko);
-        Node node = (Node) assetManager.loadModel("Models/rescuee1/Hero.mesh.j3o");
-        node.setLocalTranslation(33.0f, 0f, -4.0f);
+        Node node = (Node) assetManager.loadModel("Models/dad/dad_Low-Poly.mesh.j3o");
+        node.setLocalTranslation(34.0f, 0f, -12.0f);
+        node.setLocalScale(0.15f);
         jozko.makeNode("jozko");
         jozko.setNode(node);
         jozko.makeControl(new Vector3f(0.8f, 4f, 80f), new Vector3f(0.0f, -30f, 0.0f));
-        jozko.makeAnimation("Stand");
+        jozko.makeAnimation("stand");
         jozko.setHp(100f);
         jozko.setFire(fire);
         jozko.setGui(guiNode);
         jozko.setPlayer(player);
+        jozko.setWalls(walls);
         getPhysicsSpace().add(jozko.getControl());
         rootNode.attachChild(jozko.getNode());
     }
@@ -447,33 +543,21 @@ public class Game extends SimpleApplication implements ActionListener {
         jadexJanko.put(IAgentProps.Walking, true);
         jadexJanko.put(IAgentProps.NearAgent, false);
         jadexJanko.put(IAgentProps.NearFire, false);
+        jadexJanko.put(IAgentProps.Speed, Float.valueOf(1));
         com.addAgent(jadexJanko);
         janko = new Human("Janko", jadexJanko);
         janko.addAgent(jozko);
         janko.addAgent(jozkoJr);
         janko.setFire(fire);
-        Node node = (Node) assetManager.loadModel("Models/rescuee2/okoloiduci.j3o");//(Node) assetManager.loadModel("Models/rescuee2/Hero.mesh.j3o");
+        Node node = (Node) assetManager.loadModel("Models/okoloiduci/okoloiduci.j3o");//(Node) assetManager.loadModel("Models/rescuee2/Hero.mesh.j3o");
         node.setLocalTranslation(21f, 0f, 12f);
         //janko.makeNode("janko");
         janko.setNode(node);
-        janko.getNode().scale(0.25f);
+        janko.getNode().setLocalScale(0.15f);
         janko.makeControl(new Vector3f(0.5f, 4f, 80f), new Vector3f(0.0f, -30f, 0.0f));
-        janko.makeAnimation("stand", "node");
+        janko.makeAnimation("stand");
         getPhysicsSpace().add(janko.getControl());
         rootNode.attachChild(janko.getNode());
-        /*public void initOkoloiduci() 
-         {
-         pista = new Character("Pista");
-         Node node = (Node)assetManager.loadModel("Models/okoloiduci/okoloiduci.j3o"); 
-         node.setLocalTranslation(40.0f,0f,3.0f);
-         pista.makeNode("pista");
-         pista.setNode(node);
-         pista.getNode().scale(0.25f);
-         pista.makeControl(new Vector3f(0.8f, 4f, 80f), new Vector3f(0.0f, -30f, 0.0f));
-         pista.makeAnimation("stand", "node");
-         getPhysicsSpace().add(pista.getControl());
-         rootNode.attachChild(pista.getNode());        
-         }*/
     }
     /*
      * Funkcia na vytvorenie postavy.
@@ -483,22 +567,26 @@ public class Game extends SimpleApplication implements ActionListener {
         //jadex
         jadexJozkoJr = new AgentProps("jozko_jr");
         jadexJozkoJr.put(IAgentProps.Health, Integer.valueOf(100));
+        jadexJozkoJr.put(IAgentProps.Speed, Float.valueOf(1));
         jadexJozkoJr.put(IAgentProps.Follow, false);
         jadexJozkoJr.put(IAgentProps.NearFire, false);
         jadexJozkoJr.put(IAgentProps.Saved, false);
         jadexJozkoJr.put(IAgentProps.NearPlayer, false);
         jadexJozkoJr.put(IAgentProps.Walking, true);
+        jadexJozkoJr.put(IAgentProps.ChildSafe, false);
+        jadexJozkoJr.put(IAgentProps.Cry, false);
         com.addAgent(jadexJozkoJr);
         jozkoJr = new Rescuee("JozkoJr", jadexJozkoJr);
         jozkoJr.setFire(fire);
         jozkoJr.setGui(guiNode);
         jozkoJr.setPlayer(player);
-        Node node = (Node) assetManager.loadModel("Models/rescuee2/Hero.mesh.j3o");
-        node.setLocalTranslation(33.0f, 0f, -6.0f);
+        Node node = (Node) assetManager.loadModel("Models/son/chlapec_HighPolyEyes.mesh.j3o");
+        node.setLocalTranslation(47.0f, 0f, -6.0f);
+        node.setLocalScale(0.15f);
         //jozko.makeNode("jozko");
         jozkoJr.setNode(node);
         jozkoJr.makeControl(new Vector3f(0.8f, 4f, 80f), new Vector3f(0.0f, -30f, 0.0f));
-        jozkoJr.makeAnimation("Stand");
+        jozkoJr.makeAnimation("stand");
         jozkoJr.setHp(100f);
         getPhysicsSpace().add(jozkoJr.getControl());
         rootNode.attachChild(jozkoJr.getNode());
@@ -562,28 +650,33 @@ public class Game extends SimpleApplication implements ActionListener {
         Fire fire1 = new Fire(assetManager, 50, 0, -2);
         Fire fire2 = new Fire(assetManager, 50, 0, -10);
         Fire fire3 = new Fire(assetManager, 50, 0, -18);
-        Fire fire4 = new Fire(assetManager, 32, 0, -17);
-        Fire fire5 = new Fire(assetManager, 32, 0, -9);
+        Fire fire4 = new Fire(assetManager, 31, 0, -18);
+        //Fire fire5 = new Fire(assetManager, 32, 0, -9);
         Fire fire6 = new Fire(assetManager, 32, 0, -1);
         Fire fire7 = new Fire(assetManager, 33, 0, 0);
         Fire fire8 = new Fire(assetManager, 37, 0, 0);
         Fire fire9 = new Fire(assetManager, 40, 0, 0);
         Fire fire10 = new Fire(assetManager, 48, 0, 0);
         Fire fire11 = new Fire(assetManager, 42, 5, -10);
-
+        Fire fire12 = new Fire(assetManager, 34.3f, 0, -6.7f);
+        Fire fire13 = new Fire(assetManager, 39f, 0, -11.3f);
+        Fire fire14 = new Fire(assetManager, 42.34f, 0, -10.45f);
         fire = new ArrayList<Fire>();
 
         fire.add(fire1);
         fire.add(fire2);
         fire.add(fire3);
         fire.add(fire4);
-        fire.add(fire5);
+        //fire.add(fire5);
         fire.add(fire6);
         fire.add(fire7);
         fire.add(fire8);
         fire.add(fire9);
         fire.add(fire10);
         fire.add(fire11);
+        fire.add(fire12);
+        fire.add(fire13);
+        fire.add(fire14);
         for (Fire f : fire) {
             rootNode.attachChild(f.fireNode());
         }
@@ -595,8 +688,8 @@ public class Game extends SimpleApplication implements ActionListener {
      */
 
     private void dontWalkCrossWalls() {
-        ArrayList walls = new ArrayList<Node>();
-        System.out.println("House ma deti: " + houseNode.getChildren().size());
+        walls = new ArrayList<Spatial>();
+        //System.out.println("House ma deti: " + houseNode.getChildren().size());
 
         for (int i = 0; i < houseNode.getChildren().size(); i++) {
             walls.add(houseNode.getChild(i));

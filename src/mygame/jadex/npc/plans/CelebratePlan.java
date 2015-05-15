@@ -7,7 +7,7 @@ package mygame.jadex.npc.plans;
 import jadex.bdi.runtime.Plan;
 import jadex.rules.rulesystem.IAgenda;
 import mygame.jadex.communication.AgentProps;
-import mygame.jadex.communication.IAgentProps;
+import mygame.jadex.help.IAgentProps;
 import sk.tuke.fei.bdi.emotionalengine.component.Engine;
 import sk.tuke.fei.bdi.emotionalengine.res.R;
 

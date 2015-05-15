@@ -5,7 +5,7 @@
 package mygame.jadex.npc.plans;
 
 import jadex.bdi.runtime.Plan;
-import mygame.jadex.communication.Casting;
+import mygame.jadex.help.Casting;
 
 /**
  *

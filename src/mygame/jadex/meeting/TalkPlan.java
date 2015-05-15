@@ -9,7 +9,7 @@ import jadex.bdi.runtime.IGoal;
 import jadex.bdi.runtime.Plan;
 import mygame.jadex.communication.AgentProps;
 import mygame.jadex.communication.Communicator;
-import mygame.jadex.communication.IAgentProps;
+import mygame.jadex.help.IAgentProps;
 
 /**
  *

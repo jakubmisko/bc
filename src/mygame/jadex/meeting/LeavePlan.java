@@ -8,7 +8,7 @@ import com.jme3.math.Vector3f;
 import jadex.bdi.runtime.Plan;
 import mygame.jadex.communication.AgentProps;
 import mygame.jadex.communication.Communicator;
-import mygame.jadex.communication.IAgentProps;
+import mygame.jadex.help.IAgentProps;
 
 /**
  *

@@ -7,10 +7,10 @@ package mygame.characters;
 import com.jme3.math.Vector3f;
 import java.util.ArrayList;
 import java.util.List;
-import mygame.Fire;
+import mygame.items.Fire;
 import mygame.jadex.communication.AgentProps;
-import mygame.jadex.communication.Casting;
-import mygame.jadex.communication.IAgentProps;
+import mygame.jadex.help.Casting;
+import mygame.jadex.help.IAgentProps;
 
 /**
  *
@@ -77,8 +77,9 @@ public class Human extends Character {
         } else {
             getControl().setWalkDirection(new Vector3f(0, 0, 0));
             if (getAnimation().equals("walk")) {
-                setAnimation("stand");
+                setAnimation("lookIn");
                 jadex.put(IAgentProps.Walking, false);
+                getControl().setViewDirection(Vector3f.UNIT_X);
             }
         }
         if (nearAnybody(10) && !Casting.toBool(jadex.get(IAgentProps.NearAgent))) {
@@ -90,10 +91,14 @@ public class Human extends Character {
             jadex.put(IAgentProps.NearFire, true);
             //setAnimation("Fear1");
         }
-        if (nearAnybody(10) && Casting.toBool(jadex.get(IAgentProps.NearAgent))) {
+        if (!nearAnybody(20) && Casting.toBool(jadex.get(IAgentProps.NearAgent))) {
             jadex.put(IAgentProps.NearAgent, false);
         } else if (!nearFire(13, fire) && Casting.toBool(jadex.get(IAgentProps.NearFire))) {
             jadex.put(IAgentProps.NearFire, false);
+        }
+        if(!Casting.toBool(jadex.get(IAgentProps.Walking))&& !Casting.toBool(jadex.get(IAgentProps.NearFire))
+              &&  !Casting.toBool(jadex.get(IAgentProps.NearAgent))){
+            jadex.put(IAgentProps.Walking, true);
         }
 //        if (!getAnimation().equals("Stand") && !Casting.toBool(jadex.get(IAgentProps.Walking))
 //                && !Casting.toBool(jadex.get(IAgentProps.NearFire))

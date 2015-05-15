@@ -4,7 +4,7 @@
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xsi:schemaLocation="http://jadex.sourceforge.net/jadex
 	                    http://jadex.sourceforge.net/jadex-bdi-2.4.xsd"
-       name="jozko_jr" package="mygame.jadex.npc">
+       name="anka" package="mygame.jadex.npc">
 
     <imports>
         <!-- jadex java imports -->
@@ -34,14 +34,14 @@
         </belief>
         <!-- Personality beliefs -->
         <belief name="myTemper" class="String">
-            <fact>1.3</fact>
+            <fact>1.1</fact>
         </belief>
         <belief name="myComposure" class="String">
-            <fact>0.6</fact>
+            <fact>0.7</fact>
         </belief>
         <!-- communiocation interface -->
         <belief name="shared" class="AgentProps">
-            <fact>Communicator.INSTANCE.getAgent("jozko_jr")</fact>
+            <fact>Communicator.INSTANCE.getAgent("anka")</fact>
         </belief>
         <belief name="follow" class="Boolean">
             <fact> false </fact>
@@ -210,12 +210,7 @@
             <parameter name="desirability" class="Boolean">
                 <value>(Math.random() * 0.5) + 0.6</value>
             </parameter>
-            <parameter name="temper" class="String">
-                <value> $beliefbase.myTemper </value> 
-            </parameter>
-            <parameter name="composure" class="String">      
-                <value>$beliefbase.myComposure</value>
-            </parameter><!-- Personality parameters -->
+            <!-- Personality parameters -->
             <parameter name="temper" class="String">
                 <value> $beliefbase.myTemper </value> 
             </parameter>
@@ -238,6 +233,28 @@
                 $beliefbase.hp == 0
             </dropcondition>
          
+        </achievegoal>
+        <achievegoal name="reject_follow">
+            <parameter name="emotional" class="Boolean">
+                <value>true</value>
+            </parameter>
+            <parameter name="probability" class="String">
+                <value>(Math.random() * 0.5) + 0.6</value>
+            </parameter>
+            <parameter name="desirability" class="Boolean">
+                <value>(Math.random() * 0.5) + 0.2</value>
+            </parameter>
+            <parameter name="temper" class="String">
+                <value> $beliefbase.myTemper </value> 
+            </parameter>
+            <parameter name="composure" class="String">      
+                <value>$beliefbase.myComposure</value>
+            </parameter>
+            <targetcondition language="jcl">
+                $beliefbase.nearP == false
+                ||
+                $beliefbase.child_saved == true
+            </targetcondition>
         </achievegoal>
         <performgoal name="cry">
             <parameter name="emotional" class="Boolean">
@@ -403,8 +420,32 @@
                 <goal ref="cry"/>
             </trigger>
         </plan>
-
-        <!-- Inicializacia emocneho engineu.-->
+        <plan name="reject">
+            <parameter name="emotional" class="Boolean">
+                <value>true</value>
+            </parameter>
+            <parameter name="approval" class="String" >
+                <value>(Math.random() * 0.5) + 0.4</value>
+            </parameter>
+            <parameter name="desirability" class="String" >
+                <value>(Math.random() * 0.5) + 0.6</value>
+            </parameter>
+            <parameter name="other_agent" class="String" >
+                <value>(Math.random() * 0.5) + 0.4</value>
+            </parameter>
+            <parameter name="temper" class="String">
+                <value> $beliefbase.myTemper </value> 
+            </parameter>
+            <parameter name="composure" class="String">      
+                <value>$beliefbase.myComposure</value>
+            </parameter>
+            <body class="RejectPlan"/>
+            <trigger>
+                <goal ref="reject_follow"/>
+            </trigger>
+        </plan>
+        <!-- 
+        Inicializacia emocneho engineu.-->
         
         <plan name="initialize_emotional_engine_plan">
             <parameter name="gui_enabled" class="Boolean">
@@ -423,7 +464,7 @@
                 <value>20</value>
             </parameter>
             <parameterset name="emotional_others" class="String">
-                 <value>"jozko"</value>
+                 <value>"jozko_jr"</value>
                <!--
                 <value>"Rescuee3"</value> -->
             </parameterset>
@@ -472,13 +513,11 @@
             <goals>
                 <!--Vychodiskovy ciel. -->
                 <initialgoal ref="wander"/>
-                
             </goals>
             
             <plans>
-                <!--
-                <initialplan ref="B"/>
-                -->
+                <!-- debug
+                                <initialplan ref="B"/>-->
                 <initialplan ref="initialize_emotional_engine_plan"/>
                 <initialplan ref="receive_emotional_message_service_plan"/>
             </plans>

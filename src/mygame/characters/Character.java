@@ -7,6 +7,7 @@ package mygame.characters;
 import com.jme3.animation.AnimChannel;
 import com.jme3.animation.AnimControl;
 import com.jme3.bullet.control.BetterCharacterControl;
+import com.jme3.collision.CollisionResults;
 import com.jme3.input.FlyByCamera;
 import com.jme3.math.FastMath;
 import com.jme3.math.Quaternion;
@@ -18,7 +19,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import mygame.Fire;
+import mygame.items.Fire;
 
 /**
  *
@@ -26,6 +27,7 @@ import mygame.Fire;
  */
 public abstract class Character {
 
+    private ArrayList<Spatial> walls;
     private float hp;
     private Node node;
     private BetterCharacterControl control;
@@ -34,13 +36,16 @@ public abstract class Character {
     private boolean saved;
     private boolean busy;
     private boolean follow;
-    
-    
+
     public Character(String meno) {
         this.meno = meno;
         saved = false;
         busy = false;
         hp = 100;
+    }
+
+    public void setWalls(ArrayList<Spatial> walls) {
+        this.walls = walls;
     }
 
     public boolean isFollowing() {
@@ -157,8 +162,6 @@ public abstract class Character {
         animacia.setAnim(name);
     }
 
-  
-
     public void setAnimation(String name, float blend) {
         animacia.setAnim(name, blend);
     }
@@ -180,14 +183,14 @@ public abstract class Character {
     /**
      * @return the meno
      */
-    public String getMeno() {
+    public String getName() {
         return meno;
     }
 
     /**
      * @param meno the meno to set
      */
-    public void setMeno(String meno) {
+    public void setName(String meno) {
         this.meno = meno;
     }
 
@@ -244,10 +247,10 @@ public abstract class Character {
     public void follow(Character player, float rychlost) {
         if (isNear(player, 2)) {
             control.setWalkDirection(new Vector3f(0f, 0f, 0f));
-            setAnimation("Stand");
+            setAnimation("stand");
         } else {
-            if (animacia.getAnimationName().equalsIgnoreCase("Stand")) {
-                setAnimation("Walk");
+            if (animacia.getAnimationName().equalsIgnoreCase("stand")) {
+                setAnimation("walk");
             }
             Vector3f pozicia = player.getNode().getLocalTranslation().subtract(node.getLocalTranslation());
             control.setWalkDirection(new Vector3f(pozicia.getX() / rychlost, pozicia.getY() / rychlost, pozicia.getZ() / rychlost));
@@ -294,9 +297,9 @@ public abstract class Character {
             z = -rychlost;
         }
         if ((pomx == rychlost || pomz == rychlost || pomx == -rychlost || pomz == -rychlost) && (x == 0 && z == 0)) {
-            animacia.setAnim("Stand");
+            animacia.setAnim("stand");
         } else if ((pomx == 0 && pomz == 0) && (x == rychlost || z == rychlost || x == -rychlost || z == -rychlost)) {
-            animacia.setAnim("Walk");
+            animacia.setAnim("walk");
         }
 
         Vector3f position = new Vector3f(x, y, z);
@@ -304,18 +307,23 @@ public abstract class Character {
         if (!position.equals(new Vector3f(0, y, 0))) {
             control.setViewDirection(position);
         }
+        
+    }
+
+    private void turnAround() {
+        Vector3f dir = control.getWalkDirection();
+        dir.addLocal(dir.negate().mult(2f));
+        if (dir.equals(Vector3f.ZERO)) {
+            dir = new Vector3f(1f, 0f, 0f);
+        }
+        control.setWalkDirection(dir);
+        control.setViewDirection(dir);
     }
 
     public void runFromFire(float speed) {
         if (!busy) {
-            animacia.setAnim("Fear1");
-            Vector3f dir = control.getWalkDirection();
-            dir.addLocal(dir.negate().mult(2f));
-            if (dir.equals(Vector3f.ZERO)) {
-                dir = new Vector3f(1f, 0f, 0f);
-            }
-            control.setWalkDirection(dir);
-            control.setViewDirection(dir);
+            animacia.setAnim("nearFire");
+            turnAround();
             busy = true;
         }
     }
@@ -325,7 +333,7 @@ public abstract class Character {
      */
     public void stopWalking() {
         control.setWalkDirection(new Vector3f(0f, 0f, 0f));
-        animacia.setAnim("Stand");
+        animacia.setAnim("stand");
     }
 
     /**
@@ -347,5 +355,6 @@ public abstract class Character {
             control.setViewDirection(new Vector3f(0, 0, -1));
         }
     }
+
     public abstract void action();
 }

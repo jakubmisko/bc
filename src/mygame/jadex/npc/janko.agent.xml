@@ -32,6 +32,13 @@
         <belief name="emotional_engine" class="Engine">
             <fact>new Engine()</fact>
         </belief>
+        <!-- Personality beliefs -->
+        <belief name="myTemper" class="String">
+            <fact>1.0</fact>
+        </belief>
+        <belief name="myComposure" class="String">
+            <fact>1.0</fact>
+        </belief>
         <belief name="shared" class="AgentProps">
             <fact>Communicator.INSTANCE.getAgent("janko")</fact>
         </belief>
@@ -43,6 +50,9 @@
         </belief>
         <belief name="walk" class="Boolean">
             <fact>false</fact>
+        </belief>
+        <belief name="speed" class="Float">
+            <fact>1.0</fact>
         </belief>
     </beliefs>
     <goals>
@@ -58,6 +68,12 @@
             </parameter>
             <parameter name="desirability" class="Boolean">
                 <value>(Math.random() * 0.5) + 0.6</value>
+            </parameter>
+            <parameter name="temper" class="String">
+                <value> $beliefbase.myTemper </value> 
+            </parameter>
+            <parameter name="composure" class="String">      
+                <value>$beliefbase.myComposure</value>
             </parameter>
             <dropcondition language="jcl">
                 $beliefbase.fire == true
@@ -86,6 +102,12 @@
             <parameter name="desirability" class="Boolean">
                 <value>(Math.random() * 0.5) + 0.6</value>
             </parameter>
+            <parameter name="temper" class="String">
+                <value> $beliefbase.myTemper </value> 
+            </parameter>
+            <parameter name="composure" class="String">      
+                <value>$beliefbase.myComposure</value>
+            </parameter>
             <creationcondition language="jcl">
                 $beliefbase.fire == true
             </creationcondition>
@@ -107,6 +129,12 @@
             </parameter>
             <parameter name="desirability" class="Boolean">
                 <value>(Math.random() * 0.5) + 0.6</value>
+            </parameter>
+            <parameter name="temper" class="String">
+                <value> $beliefbase.myTemper </value> 
+            </parameter>
+            <parameter name="composure" class="String">      
+                <value>$beliefbase.myComposure</value>
             </parameter>
             <creationcondition language="jcl">
                 $beliefbase.nearA == true

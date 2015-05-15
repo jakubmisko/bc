@@ -4,13 +4,11 @@
  */
 package mygame.jadex.npc.plans;
 
-import com.jme3.math.Vector3f;
 import jadex.bdi.runtime.IGoal;
 import jadex.bdi.runtime.Plan;
-import java.util.Random;
 import mygame.jadex.communication.AgentProps;
-import mygame.jadex.communication.Casting;
-import mygame.jadex.communication.IAgentProps;
+import mygame.jadex.help.Casting;
+import mygame.jadex.help.IAgentProps;
 import sk.tuke.fei.bdi.emotionalengine.component.Engine;
 import sk.tuke.fei.bdi.emotionalengine.res.R;
 
@@ -35,6 +33,14 @@ public class WanderPlan extends Plan {
                 //waitFor(5000);
             } else {
                 System.out.println("chodim #" + getComponentName());
+                float speed = (Float) getBeliefbase().getBelief("speed").getFact();
+                if(e.getElement("wander", R.GOAL).getEmotion(R.FEAR).getIntensity() < 0.25
+                        && speed != 1.0f){
+                    p.put(IAgentProps.Speed, new Float(1.0f));
+                } else if(e.getElement("wander", R.GOAL).getEmotion(R.FEAR).getIntensity() > 0.25
+                        && speed != 1.2f){
+                    p.put(IAgentProps.Speed, new Float(1.2f));
+                }
                 waitFor(2000);
             }
 

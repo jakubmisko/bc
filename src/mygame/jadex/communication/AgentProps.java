@@ -23,7 +23,6 @@ public class AgentProps extends ConcurrentHashMap<String, Object> {
     }
     public AgentProps(String name) {
         this.name = name;
-        //updated = false;
         this.pcs = new SimplePropertyChangeSupport(this);
     }
     
@@ -50,8 +49,8 @@ public class AgentProps extends ConcurrentHashMap<String, Object> {
      * @param type kluc k objektu
      * @return objekt triedy java.lang.Object, ktory treba pretypovat
      */
-    public Object get(String type) {
-        //Object ret = super.get(type);
+    @Override
+    public Object get(Object type) {
        // pcs.firePropertyChange("HashMap", null, this); // hack
         return super.get(type);
     }
