@@ -3,7 +3,6 @@ package mygame;
 import mygame.items.Fire;
 import mygame.items.Water;
 import mygame.items.Door;
-import mygame.characters.Character;
 import com.jme3.app.SimpleApplication;
 import com.jme3.audio.AudioNode;
 import com.jme3.bounding.BoundingBox;
@@ -13,13 +12,10 @@ import com.jme3.bullet.collision.shapes.CollisionShape;
 import com.jme3.bullet.collision.shapes.SphereCollisionShape;
 import com.jme3.bullet.control.RigidBodyControl;
 import com.jme3.bullet.util.CollisionShapeFactory;
-import com.jme3.collision.CollisionResults;
-import com.jme3.font.BitmapText;
 import com.jme3.input.KeyInput;
 import com.jme3.input.MouseInput;
 import com.jme3.input.controls.ActionListener;
 import com.jme3.input.controls.KeyTrigger;
-import com.jme3.input.controls.MouseAxisTrigger;
 import com.jme3.input.controls.MouseButtonTrigger;
 import com.jme3.light.AmbientLight;
 import com.jme3.light.DirectionalLight;
@@ -27,31 +23,28 @@ import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
 import com.jme3.math.Quaternion;
-import com.jme3.math.Ray;
-import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.renderer.RenderManager;
 import com.jme3.renderer.queue.RenderQueue;
-import com.jme3.scene.CameraNode;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
-import com.jme3.scene.control.CameraControl.ControlDirection;
 import com.jme3.scene.shape.Box;
 import com.jme3.scene.shape.Quad;
-import com.jme3.scene.shape.Sphere;
-import com.jme3.ui.Picture;
 import com.jme3.water.SimpleWaterProcessor;
 import java.util.ArrayList;
-import java.util.Random;
+import java.util.Timer;
+import java.util.TimerTask;
 import mygame.characters.Human;
 import mygame.characters.Player;
 import mygame.characters.Rescuee;
+import mygame.gui.NiftyWelcomeScreen;
 import mygame.jadex.JadexStarter;
 import mygame.jadex.communication.AgentProps;
 import mygame.jadex.help.Casting;
 import mygame.jadex.communication.Communicator;
 import mygame.jadex.help.IAgentProps;
+import mygame.gui.ProgressbarControl;
 
 /**
  * @author Jakub
@@ -59,11 +52,12 @@ import mygame.jadex.help.IAgentProps;
 public class Game extends SimpleApplication implements ActionListener {
 
     // private Picture pic;
-    private ArrayList<Spatial> walls;
+    private ArrayList<Spatial> obstacles;
     private ArrayList<Fire> fire;
     private ArrayList<Door> doorList;
     private Node cross, houseNode, equip;
     private BulletAppState bulletAppState;
+    private NiftyWelcomeScreen welcome;
     //private float time = 0.7f;
     private Vector3f walkDirection;
     private AudioNode audioNode;
@@ -76,7 +70,10 @@ public class Game extends SimpleApplication implements ActionListener {
     private Human janko;
     private Player player;
     private JadexStarter start;
-    private ArrayList<Spatial> furniture;
+    private AudioNode fireAudio;
+    private AudioNode fireExtinguishingAudio;
+    private AudioNode doorAudio;
+    private ProgressbarControl guiControl;
 
     public void turnOn() {
         this.start();
@@ -107,7 +104,7 @@ public class Game extends SimpleApplication implements ActionListener {
 
     private void initFurniture() {
         Quaternion qua = new Quaternion();
-        furniture = new ArrayList<Spatial>();
+        obstacles = new ArrayList<Spatial>();
 
         Node table = (Node) assetManager.loadModel("Models/furniture/table/Computer Table.j3o");
         table.setLocalTranslation(43.2f, 0.05f, -3.7f);
@@ -130,11 +127,11 @@ public class Game extends SimpleApplication implements ActionListener {
         Node sofa = (Node) assetManager.loadModel("Models/furniture/sofa/sofa.j3o");
         sofa.setLocalTranslation(31.2f, 0.05f, -12.0f);
 
-        furniture.add(table);
-        furniture.add(bed);
-        furniture.add(coffe);
-        furniture.add(lamp);
-        furniture.add(sofa);
+        obstacles.add(table);
+        obstacles.add(bed);
+        obstacles.add(coffe);
+        obstacles.add(lamp);
+        obstacles.add(sofa);
 
         rootNode.attachChild(table);
         rootNode.attachChild(bed);
@@ -159,32 +156,18 @@ public class Game extends SimpleApplication implements ActionListener {
      * hráč.
      */
     private void openDoor() {
-        Thread doorThread = new Thread() {
-            public void run() {
-                for (int i = 0; i < doorList.size(); i++) {
-                    Door door = doorList.get(i);
-                    //if(player.compare(player.getNode().getLocalTranslation(), door.getDoorNode().getLocalTranslation(), 2))
-                    if (player.getNode().getLocalTranslation().distance(door.getDoorNode().getLocalTranslation()) < 2
-                            || jozko.getNode().getLocalTranslation().distance(door.getDoorNode().getLocalTranslation()) < 2
-                            || jozkoJr.getNode().getLocalTranslation().distance(door.getDoorNode().getLocalTranslation()) < 2
-                            || anka.getNode().getLocalTranslation().distance(door.getDoorNode().getLocalTranslation()) < 2) {
-                        if (door.getAnim().equals("Closed")) {
-                            door.setAnim("Opening");
-                        } else if (door.getAnim().equals("Opening")) {
-                            try {
-                                Thread.sleep(1700);
-                            } catch (InterruptedException ex) {
-                                //Logger.getLogger(Game.class.getName()).log(Level.SEVERE, null, ex);
-                            }
-                            door.setAnim("Open");
-                        }
-                    }
+        for (int i = 0; i < doorList.size(); i++) {
+            Door door = doorList.get(i);
+            //if(player.compare(player.getNode().getLocalTranslation(), door.getDoorNode().getLocalTranslation(), 2))
+            if (player.getNode().getLocalTranslation().distance(door.getDoorNode().getLocalTranslation()) < 2
+                    || jozko.getNode().getLocalTranslation().distance(door.getDoorNode().getLocalTranslation()) < 2 || jozkoJr.getNode().getLocalTranslation().distance(door.getDoorNode().getLocalTranslation()) < 2
+                    || anka.getNode().getLocalTranslation().distance(door.getDoorNode().getLocalTranslation()) < 2) {
+                if (door.getAnim().equals("Closed")) {
+                    door.setAnim("Opening");
+                    doorAudio.play();
                 }
             }
-        };
-
-        doorThread.start();
-
+        }
     }
 
     /**
@@ -193,13 +176,13 @@ public class Game extends SimpleApplication implements ActionListener {
      */
     private void addDoor() {
         doorList = new ArrayList<Door>();
-        doorList.add(new Door(assetManager, 0, new Vector3f(38.1f, 0.1f, 0.0f), new Vector3f(1.3f, 2.12f, 1.0f)));
-        doorList.add(new Door(assetManager, 0, new Vector3f(34.2f, 0.1f, -6.7f), new Vector3f(1.44f, 2.2f, 1.0f)));
-        doorList.add(new Door(assetManager, FastMath.PI / 2, new Vector3f(39.2f, 0.1f, -11.45f), new Vector3f(1.3f, 2.3f, 1.0f)));
-        doorList.add(new Door(assetManager, FastMath.PI / 2, new Vector3f(39.2f, 0.1f, -19.1f), new Vector3f(1.2f, 2.3f, 1.0f)));
-        doorList.add(new Door(assetManager, -FastMath.PI / 2, new Vector3f(42.2f, 0.1f, -17.5f), new Vector3f(1.4f, 2.2f, 1.0f)));
-        doorList.add(new Door(assetManager, -FastMath.PI / 2, new Vector3f(42.2f, 0.1f, -10.4f), new Vector3f(1.4f, 2.06f, 1.0f)));
-        doorList.add(new Door(assetManager, FastMath.PI, new Vector3f(46.6f, 0.1f, -6.0f), new Vector3f(1.5f, 2.3f, 1.0f)));
+        doorList.add(new Door(assetManager, FastMath.PI, new Vector3f(38.1f, 0.1f, 0.0f), new Vector3f(1.3f, 2.12f, 1.0f)));
+        doorList.add(new Door(assetManager, FastMath.PI, new Vector3f(34.2f, 0.1f, -6.7f), new Vector3f(1.44f, 2.2f, 1.0f)));
+        doorList.add(new Door(assetManager, FastMath.PI * 3 / 2, new Vector3f(39.2f, 0.1f, -11.45f), new Vector3f(1.3f, 2.3f, 1.0f)));
+        doorList.add(new Door(assetManager, FastMath.PI * 3 / 2, new Vector3f(39.2f, 0.1f, -19.1f), new Vector3f(1.2f, 2.3f, 1.0f)));
+        doorList.add(new Door(assetManager, -FastMath.PI * 3 / 2, new Vector3f(42.2f, 0.1f, -17.5f), new Vector3f(1.4f, 2.2f, 1.0f)));
+        doorList.add(new Door(assetManager, FastMath.PI / 2, new Vector3f(42.2f, 0.1f, -10.4f), new Vector3f(1.4f, 2.06f, 1.0f)));
+        doorList.add(new Door(assetManager, 0, new Vector3f(46.6f, 0.1f, -6.0f), new Vector3f(1.5f, 2.3f, 1.0f)));
 
         for (int i = 0; i < doorList.size(); i++) {
             Door door = doorList.get(i);
@@ -209,6 +192,11 @@ public class Game extends SimpleApplication implements ActionListener {
 
     @Override
     public void simpleInitApp() {
+        welcome = new NiftyWelcomeScreen(assetManager, inputManager, audioRenderer, guiViewPort, flyCam);
+        welcome.InitNifty(welcome);
+
+        //setDisplayFps(false);
+        setDisplayStatView(false);
         com = Communicator.INSTANCE;
         initState();
         initLight();
@@ -221,32 +209,51 @@ public class Game extends SimpleApplication implements ActionListener {
         initFire();
         initHouse();
         initCross();
+        spreadFireTimer(fire);
         // postavicky predposledne
         initPlayer();
         initJozko();
+        initAnka();
         initJozkoJr();
         initJanko();
-        initAnka();
         // jadex posledny
-        // initJadex();
+        initJadex();
     }
 
     @Override
     public void simpleUpdate(float tpf) {
         player.action();
-        jozko.walking();
-        /*
-        for(Spatial wall : walls){
-
-            System.out.println(wall.getLocalTranslation());
+        if (player.nearFire(10, fire)) {
+            fireAudio.setVolume(1.0f);
+        } else if (player.nearFire(20, fire)) {
+            fireAudio.setVolume(0.7f);
+        } else if (player.nearFire(30, fire)) {
+            fireAudio.setVolume(0.3f);
+            fireAudio.play();
+        } else {
+            fireAudio.stop();
         }
-        */
-         jozko.action();
-         jozkoJr.action();
-         janko.action();
-         anka.action();
-
+        jozko.action();
+        jozkoJr.action();
+        janko.action();
+        anka.action();
+        guiUpdate();
         openDoor();
+        if(fire.get(0).fireNode().getStartSize() > 6){
+            tim.cancel();
+            tim.purge();
+        }
+    }
+
+    private void guiUpdate() {
+        if (guiControl == null && welcome.getNifty().getCurrentScreen().getScreenId().equals("hud")) {
+            guiControl = (ProgressbarControl) welcome.getNifty().getCurrentScreen().getScreenController();
+        } else if (guiControl != null) {
+            guiControl.setProgress(1, jozko.getHp() / 100);
+            guiControl.setProgress(2, jozkoJr.getHp() / 100);
+            guiControl.setProgress(3, anka.getHp() / 100);
+            guiControl.setProgress(4, player.getHp() / 100);
+        }
     }
 
     @Override
@@ -312,6 +319,21 @@ public class Game extends SimpleApplication implements ActionListener {
         audioNode.setLooping(false);
         rootNode.attachChild(audioNode);
 
+        fireAudio = new AudioNode(assetManager, "Sounds/fire.WAV", false);
+        fireAudio.setPositional(false);
+        fireAudio.setLooping(true);
+        rootNode.attachChild(fireAudio);
+
+        fireExtinguishingAudio = new AudioNode(assetManager, "Sounds/fireExtinguisher.wav", false);
+        fireExtinguishingAudio.setPositional(false);
+        fireExtinguishingAudio.setLooping(false);
+        rootNode.attachChild(fireExtinguishingAudio);
+
+        doorAudio = new AudioNode(assetManager, "Sounds/door.wav", paused);
+        doorAudio.setPositional(false);
+        doorAudio.setLooping(false);
+        rootNode.attachChild(doorAudio);
+
         AudioNode natureAudio = new AudioNode(assetManager, "Sounds/Nature.ogg", false);
         natureAudio.setPositional(false);
         natureAudio.setLooping(true);
@@ -330,8 +352,8 @@ public class Game extends SimpleApplication implements ActionListener {
         player.makeNode("Player");
         player.makeControl(new Vector3f(0.3f, 5f, 70f), new Vector3f(0, -80, 0));
         //player.makeAnimation("Stand");
-        player.getNode().setLocalTranslation(32f, 0f, 5f);
-        player.getControl().warp(new Vector3f(32.0f, 0f, 5.0f));
+        player.getNode().setLocalTranslation(39f, 0f, 35f);
+        player.getControl().warp(new Vector3f(39.0f, 0f, 35.0f));
         player.getControl().setViewDirection(walkDirection);
         getPhysicsSpace().add(player.getControl());
         player.getNode().setModelBound(new BoundingBox());
@@ -376,14 +398,16 @@ public class Game extends SimpleApplication implements ActionListener {
         inputManager.addMapping("f9", new KeyTrigger(KeyInput.KEY_F9));
         inputManager.addMapping("f10", new KeyTrigger(KeyInput.KEY_F10));
         inputManager.addMapping("f11", new KeyTrigger(KeyInput.KEY_F11));
-        inputManager.addMapping("f12", new KeyTrigger(KeyInput.KEY_F12));
-        inputManager.addListener(this, new String[]{"W", "A", "S", "D", "E", "LMB", "f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8", "f9", "f10", "f11", "f12"});
+        inputManager.addMapping("esc", new KeyTrigger(KeyInput.KEY_ESCAPE));
+        inputManager.addListener(this, new String[]{"W", "A", "S", "D", "E", "LMB", "f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8", "f9", "f10", "f11", "esc"});
     }
     /*
      * Priradi konkrétnemu znaku hodnotu pravda, v prípade stlačenia klávesy.
      */
 
     public void onAction(String name, boolean isPressed, float tpf) {
+
+        flyCam.setDragToRotate(false);
         if (name.equalsIgnoreCase("W")) {
             player.setW(isPressed);
         }
@@ -397,19 +421,19 @@ public class Game extends SimpleApplication implements ActionListener {
             player.setD(isPressed);
         }
         if (name.equalsIgnoreCase("E")) {
-            if (jozko.isNear(player, 4) && !Casting.toBool(jadexJozko.get(IAgentProps.NearPlayer))
+            if (jozko.isNear(player, 2) && !Casting.toBool(jadexJozko.get(IAgentProps.NearPlayer))
                     && !Casting.toBool(jadexJozko.get(IAgentProps.Saved))
                     && Casting.toInt(jadexJozko.get(IAgentProps.Health)) != 0) {
                 jozko.stopWalking();
                 jadexJozko.put(IAgentProps.Walking, false);
                 jadexJozko.put(IAgentProps.NearPlayer, true);
-            } else if (jozkoJr.isNear(player, 4) && !Casting.toBool(jadexJozkoJr.get(IAgentProps.NearPlayer))
+            } else if (jozkoJr.isNear(player, 2) && !Casting.toBool(jadexJozkoJr.get(IAgentProps.NearPlayer))
                     && !Casting.toBool(jadexJozkoJr.get(IAgentProps.Saved))
                     && Casting.toInt(jadexJozkoJr.get(IAgentProps.Health)) != 0) {
                 jozkoJr.stopWalking();
                 jadexJozkoJr.put(IAgentProps.Walking, false);
                 jadexJozkoJr.put(IAgentProps.NearPlayer, true);
-            } else if (anka.isNear(player, 4) && !Casting.toBool(jadexAnka.get(IAgentProps.NearPlayer))
+            } else if (anka.isNear(player, 2) && !Casting.toBool(jadexAnka.get(IAgentProps.NearPlayer))
                     && !Casting.toBool(jadexAnka.get(IAgentProps.Saved))
                     && Casting.toInt(jadexAnka.get(IAgentProps.Health)) != 0) {
                 anka.stopWalking();
@@ -424,6 +448,13 @@ public class Game extends SimpleApplication implements ActionListener {
         // debug
         if (name.equalsIgnoreCase("f1")) {
             System.out.println("player : " + player.getNode().getLocalTranslation().toString());
+            /*CollisionResults results = new CollisionResults();
+             Ray ray = new Ray(cam.getLocation(), cam.getDirection());
+             houseNode.collideWith(ray, results);
+             if (results.size() > 0) {
+             System.out.println(results.getClosestCollision().getGeometry().getName());
+             }
+             * */
         }
         if (name.equalsIgnoreCase("f2")) {
             jadexJozko.put(IAgentProps.NearFire, true);
@@ -465,9 +496,11 @@ public class Game extends SimpleApplication implements ActionListener {
             com.getAgent("jozko").put(IAgentProps.Saved, false);
             System.out.println("fko stlacene");
         }
-        if (name.equalsIgnoreCase("f12")) {
-            com.getAgent("jozko").put(IAgentProps.ChildSafe, false);
-            System.out.println("fko stlacene");
+        if (name.equalsIgnoreCase("esc")) {
+            //com.getAgent("jozko").put(IAgentProps.ChildSafe, false);
+            System.out.println("Bye");
+            System.exit(0);
+
         }
     }
 
@@ -486,6 +519,7 @@ public class Game extends SimpleApplication implements ActionListener {
         jadexAnka.put(IAgentProps.Walking, true);
         jadexAnka.put(IAgentProps.ChildSafe, false);
         jadexAnka.put(IAgentProps.Cry, false);
+        jadexAnka.put(IAgentProps.GiveUp, false);
         com.addAgent(jadexAnka);
         anka = new Rescuee("anka", jadexAnka);
         Node node = (Node) assetManager.loadModel("Models/mum/mother_Low-Poly.mesh.j3o");
@@ -498,6 +532,7 @@ public class Game extends SimpleApplication implements ActionListener {
         anka.setFire(fire);
         anka.setGui(guiNode);
         anka.setPlayer(player);
+        anka.setObstacles(obstacles);
         getPhysicsSpace().add(anka.getControl());
         rootNode.attachChild(anka.getNode());
     }
@@ -517,6 +552,7 @@ public class Game extends SimpleApplication implements ActionListener {
         jadexJozko.put(IAgentProps.Walking, true);
         jadexJozko.put(IAgentProps.ChildSafe, false);
         jadexJozko.put(IAgentProps.Cry, false);
+        jadexJozko.put(IAgentProps.GiveUp, false);
         com.addAgent(jadexJozko);
         jozko = new Rescuee("Jozko", jadexJozko);
         Node node = (Node) assetManager.loadModel("Models/dad/dad_Low-Poly.mesh.j3o");
@@ -530,7 +566,7 @@ public class Game extends SimpleApplication implements ActionListener {
         jozko.setFire(fire);
         jozko.setGui(guiNode);
         jozko.setPlayer(player);
-        jozko.setWalls(walls);
+        jozko.setObstacles(obstacles);
         getPhysicsSpace().add(jozko.getControl());
         rootNode.attachChild(jozko.getNode());
     }
@@ -548,6 +584,7 @@ public class Game extends SimpleApplication implements ActionListener {
         janko = new Human("Janko", jadexJanko);
         janko.addAgent(jozko);
         janko.addAgent(jozkoJr);
+        janko.addAgent(anka);
         janko.setFire(fire);
         Node node = (Node) assetManager.loadModel("Models/okoloiduci/okoloiduci.j3o");//(Node) assetManager.loadModel("Models/rescuee2/Hero.mesh.j3o");
         node.setLocalTranslation(21f, 0f, 12f);
@@ -556,6 +593,7 @@ public class Game extends SimpleApplication implements ActionListener {
         janko.getNode().setLocalScale(0.15f);
         janko.makeControl(new Vector3f(0.5f, 4f, 80f), new Vector3f(0.0f, -30f, 0.0f));
         janko.makeAnimation("stand");
+        janko.setObstacles(obstacles);
         getPhysicsSpace().add(janko.getControl());
         rootNode.attachChild(janko.getNode());
     }
@@ -575,19 +613,21 @@ public class Game extends SimpleApplication implements ActionListener {
         jadexJozkoJr.put(IAgentProps.Walking, true);
         jadexJozkoJr.put(IAgentProps.ChildSafe, false);
         jadexJozkoJr.put(IAgentProps.Cry, false);
+        jadexJozkoJr.put(IAgentProps.GiveUp, false);
         com.addAgent(jadexJozkoJr);
         jozkoJr = new Rescuee("JozkoJr", jadexJozkoJr);
         jozkoJr.setFire(fire);
         jozkoJr.setGui(guiNode);
         jozkoJr.setPlayer(player);
         Node node = (Node) assetManager.loadModel("Models/son/chlapec_HighPolyEyes.mesh.j3o");
-        node.setLocalTranslation(47.0f, 0f, -6.0f);
+        node.setLocalTranslation(46.0f, 0f, -10.0f);
         node.setLocalScale(0.15f);
         //jozko.makeNode("jozko");
         jozkoJr.setNode(node);
         jozkoJr.makeControl(new Vector3f(0.8f, 4f, 80f), new Vector3f(0.0f, -30f, 0.0f));
         jozkoJr.makeAnimation("stand");
         jozkoJr.setHp(100f);
+        jozkoJr.setObstacles(obstacles);
         getPhysicsSpace().add(jozkoJr.getControl());
         rootNode.attachChild(jozkoJr.getNode());
     }
@@ -632,14 +672,14 @@ public class Game extends SimpleApplication implements ActionListener {
         waterProcessor.setReflectionScene(scene);
         waterProcessor.setWaterColor(ColorRGBA.Brown);
 
-        Quad quad = new Quad(300, 300);
-        quad.scaleTextureCoordinates(new Vector2f(3f, 3f));
+        Quad quad = new Quad(18, 18);
+
 
         Geometry water = new Geometry("water", quad);
         water.setShadowMode(RenderQueue.ShadowMode.Receive);
         water.setLocalRotation(new Quaternion().fromAngleAxis(-FastMath.HALF_PI, Vector3f.UNIT_X));
         water.setMaterial(waterProcessor.getMaterial());
-        water.setLocalTranslation(-100, -0.1f, 100f);
+        water.setLocalTranslation(10, -0.1f, 5f);
 
         rootNode.attachChild(water);
         viewPort.addProcessor(waterProcessor);
@@ -688,23 +728,33 @@ public class Game extends SimpleApplication implements ActionListener {
      */
 
     private void dontWalkCrossWalls() {
-        walls = new ArrayList<Spatial>();
+        //obstacles = new ArrayList<Spatial>();
         //System.out.println("House ma deti: " + houseNode.getChildren().size());
 
         for (int i = 0; i < houseNode.getChildren().size(); i++) {
-            walls.add(houseNode.getChild(i));
+            obstacles.add(houseNode.getChild(i));
         }
+        // dvere
+        obstacles.remove(houseNode.getChild("SketchUp.009"));
+        obstacles.remove(houseNode.getChild("SketchUp.010"));
+        obstacles.remove(houseNode.getChild("SketchUp.011"));
+        obstacles.remove(houseNode.getChild("SketchUp.012"));
+        obstacles.remove(houseNode.getChild("SketchUp.013"));
+        obstacles.remove(houseNode.getChild("SketchUp.014"));
+        obstacles.remove(houseNode.getChild("SketchUp.015"));
+        // podlahy
+        obstacles.remove(houseNode.getChild("SketchUp.018"));
+        obstacles.remove(houseNode.getChild("SketchUp.020"));
+        obstacles.remove(houseNode.getChild("SketchUp.024"));
+        obstacles.remove(houseNode.getChild("SketchUp.027"));
+        obstacles.remove(houseNode.getChild("SketchUp.028"));
+        obstacles.remove(houseNode.getChild("SketchUp.029"));
+        //strecha
+        obstacles.remove(houseNode.getChild("SketchUp.035"));
+        obstacles.remove(houseNode.getChild("SketchUp.036"));
 
-        walls.remove(houseNode.getChild("SketchUp.011"));
-        walls.remove(houseNode.getChild("SketchUp.012"));
-        walls.remove(houseNode.getChild("SketchUp.013"));
-        walls.remove(houseNode.getChild("SketchUp.014"));
-        walls.remove(houseNode.getChild("SketchUp.015"));
-        walls.remove(houseNode.getChild("SketchUp.016"));
-        walls.remove(houseNode.getChild("SketchUp.017"));
-
-        for (int i = 0; i < walls.size(); i++) {
-            Node wallNode = (Node) walls.get(i);
+        for (int i = 0; i < obstacles.size(); i++) {
+            Node wallNode = (Node) obstacles.get(i);
             CollisionShape houseShape = CollisionShapeFactory.createMeshShape(wallNode);
             RigidBodyControl houseControl = new RigidBodyControl(houseShape, 0);
             houseNode.addControl(houseControl);
@@ -751,6 +801,7 @@ public class Game extends SimpleApplication implements ActionListener {
     }
 
     public void extinguish(int area) {
+        fireExtinguishingAudio.play();
         bulletAppState = new BulletAppState();
         bulletAppState.setThreadingType(BulletAppState.ThreadingType.PARALLEL);
         stateManager.attach(bulletAppState);
@@ -836,5 +887,24 @@ public class Game extends SimpleApplication implements ActionListener {
             fire.fireNode().killAllParticles();
             fire.fireNode().setEnabled(false);
         }
+
+    }
+    private Timer tim = new Timer();
+
+    private void spreadFireTimer(final ArrayList<Fire> fireArray) {
+
+        tim.scheduleAtFixedRate(new TimerTask() {
+            public void run() {
+                Fire fire = null;
+                for (int i = 0; i < fireArray.size(); i++) {
+                    fire = fireArray.get(i);
+                    float startSize = fire.fireNode().getStartSize();
+                    float endSize = fire.fireNode().getEndSize();
+                    fire.fireNode().setStartSize(startSize * 1.2f);
+                    fire.fireNode().setEndSize(endSize * 0.8f);
+                }
+                //System.out.println("velkost ohna " + fire.fireNode().getEndSize());
+            }
+        }, 20000, 20000);
     }
 }

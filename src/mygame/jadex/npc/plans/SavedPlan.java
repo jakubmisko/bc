@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package mygame.jadex.npc.plans;
 
 import jadex.bdi.runtime.Plan;
@@ -14,7 +10,9 @@ import mygame.jadex.help.IAgentProps;
  * @author jakub
  */
 public class SavedPlan extends Plan {
-
+    /**
+     * Plán vytvorený pri vyslobodení z horiacého domu
+     */
     @Override
     public void body() {
         System.out.println("hura som von #"+getComponentName());

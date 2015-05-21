@@ -17,7 +17,7 @@ import mygame.jadex.help.IAgentProps;
  * @author jakub
  */
 public class Human extends Character {
-
+    private final Vector3f HOUSE_POS = new Vector3f(0.0f, -1.0f, 0.0f);
     private List<Fire> fire;
     private AgentProps jadex;
     private Vector3f dir = Vector3f.UNIT_X;
@@ -76,16 +76,18 @@ public class Human extends Character {
             getControl().setViewDirection(dir);
         } else {
             getControl().setWalkDirection(new Vector3f(0, 0, 0));
+            
             if (getAnimation().equals("walk")) {
                 setAnimation("lookIn");
                 jadex.put(IAgentProps.Walking, false);
-                getControl().setViewDirection(Vector3f.UNIT_X);
+                getControl().setViewDirection(new Vector3f(1, -1, 0));
             }
         }
-        if (nearAnybody(10) && !Casting.toBool(jadex.get(IAgentProps.NearAgent))) {
+        if (nearAnybody(15) && !Casting.toBool(jadex.get(IAgentProps.NearAgent))) {
             jadex.put(IAgentProps.Walking, false);
             jadex.put(IAgentProps.NearAgent, true);
             setAnimation("applause");
+            getControl().setViewDirection(HOUSE_POS);
         } else if (nearFire(13, fire) && !Casting.toBool(jadex.get(IAgentProps.NearFire))) {
             jadex.put(IAgentProps.Walking, false);
             jadex.put(IAgentProps.NearFire, true);
@@ -100,11 +102,6 @@ public class Human extends Character {
               &&  !Casting.toBool(jadex.get(IAgentProps.NearAgent))){
             jadex.put(IAgentProps.Walking, true);
         }
-//        if (!getAnimation().equals("Stand") && !Casting.toBool(jadex.get(IAgentProps.Walking))
-//                && !Casting.toBool(jadex.get(IAgentProps.NearFire))
-//                && !Casting.toBool(jadex.get(IAgentProps.NearAgent))) {
-//            getControl().setWalkDirection(new Vector3f(0, 0, 0));
-//            setAnimation("Stand");
-//        }
+
     }
 }

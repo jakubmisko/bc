@@ -55,9 +55,6 @@
         <belief name="fire" class="Boolean">
             <fact> false </fact>
         </belief>
-        <belief name="child_saved" class="Boolean">
-            <fact> false </fact>
-        </belief>
         <belief name="hp" class="Integer">
             <fact> 100 </fact>
         </belief>
@@ -66,6 +63,9 @@
         </belief>
         <belief name="walk" class="Boolean">
             <fact>true</fact>
+        </belief>
+        <belief name="give_up" class="Boolean">
+            <fact>false</fact>
         </belief>
     </beliefs>
 
@@ -124,7 +124,6 @@
                 $beliefbase.hp == 0
             </creationcondition>
         </achievegoal>
-        
         <!--Ciel nasledovania hraca.-->
         <achievegoal name="follow_player" exported="true">
             <parameter name="emotional" class="Boolean">
@@ -141,6 +140,7 @@
             <parameter name="desirability" class="Boolean">
                 <value>(Math.random() * 0.5) + 0.4</value>
             </parameter>
+             <!-- Personality parameters -->
             <parameter name="temper" class="String">
                 <value> $beliefbase.myTemper </value> 
             </parameter>
@@ -153,12 +153,16 @@
                 $beliefbase.save == false
                 &amp;&amp;
                 $beliefbase.hp != 0
+                &amp;&amp;
+                $beliefbase.give_up == false
             </creationcondition>
             <targetcondition language="jcl">
                 $beliefbase.save == true
             </targetcondition>
             <dropcondition language="jcl">
                 $beliefbase.nearP == false
+                ||
+                $beliefbase.give_up == false
             </dropcondition>
         </achievegoal>
         
@@ -179,6 +183,7 @@
             <parameter name="desirability" class="Boolean">
                 <value>(Math.random() * 0.5) + 0.4</value>
             </parameter>
+            <!-- Personality parameters -->
             <parameter name="temper" class="String">
                 <value> $beliefbase.myTemper </value> 
             </parameter>
@@ -187,6 +192,8 @@
             </parameter>
             <creationcondition language="jcl">
                 $beliefbase.fire == true
+                &amp;&amp;
+                $beliefbase.give_up == false
             </creationcondition>
             <dropcondition language="jcl">
                 $beliefbase.follow == true
@@ -210,19 +217,13 @@
             <parameter name="desirability" class="Boolean">
                 <value>(Math.random() * 0.5) + 0.6</value>
             </parameter>
+            <!-- Personality parameters -->
             <parameter name="temper" class="String">
                 <value> $beliefbase.myTemper </value> 
             </parameter>
             <parameter name="composure" class="String">      
                 <value>$beliefbase.myComposure</value>
-            </parameter><!-- Personality parameters -->
-            <parameter name="temper" class="String">
-                <value> $beliefbase.myTemper </value> 
             </parameter>
-            <parameter name="composure" class="String">      
-                <value>$beliefbase.myComposure</value>
-            </parameter>
-            
             <contextcondition language="jcl">
                 $beliefbase.fire == false
                 &amp;&amp;
@@ -236,6 +237,8 @@
                 $beliefbase.save == true
                 ||
                 $beliefbase.hp == 0
+                ||
+                $beliefbase.give_up == true
             </dropcondition>
          
         </achievegoal>
@@ -249,6 +252,7 @@
             <parameter name="desirability" class="Boolean">
                 <value>(Math.random() * 0.5) + 0.2</value>
             </parameter>
+            <!-- Personality parameters -->
             <parameter name="temper" class="String">
                 <value> $beliefbase.myTemper </value> 
             </parameter>
@@ -264,6 +268,29 @@
                 ||
                 $beliefbase.hp == 0
             </dropcondition>
+        </performgoal>
+       
+        <performgoal name="give_up">
+            <parameter name="emotional" class="Boolean">
+                <value>true</value>
+            </parameter>
+            <parameter name="probability" class="String">
+                <value>(Math.random() * 0.2) + 0.1</value>
+            </parameter>
+            <parameter name="desirability" class="Boolean">
+                <value>(Math.random() * 0.5) + 0.2</value>
+            </parameter>
+            
+            <!-- Personality parameters -->
+            <parameter name="temper" class="String">
+                <value> $beliefbase.myTemper </value> 
+            </parameter>
+            <parameter name="composure" class="String">      
+                <value>$beliefbase.myComposure</value>
+            </parameter>
+            <creationcondition language="jcl">
+                $beliefbase.give_up
+            </creationcondition>
         </performgoal>
        
     </goals>
@@ -423,8 +450,8 @@
                 <value>20</value>
             </parameter>
             <parameterset name="emotional_others" class="String">
-                 <value>"jozko"</value>
-               <!--
+                <value>"jozko"</value>
+                <!--
                 <value>"Rescuee3"</value> -->
             </parameterset>
             <body class="InitializeEmotionalEnginePlan"/>

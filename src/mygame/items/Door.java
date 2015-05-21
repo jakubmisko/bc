@@ -6,6 +6,7 @@ package mygame.items;
 
 import com.jme3.animation.AnimChannel;
 import com.jme3.animation.AnimControl;
+import com.jme3.animation.LoopMode;
 import com.jme3.asset.AssetManager;
 import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
@@ -32,6 +33,7 @@ public class Door{
         
         AnimControl doorAnim = doorNode.getControl(AnimControl.class);
         doorChannel = doorAnim.createChannel();
+        
         doorChannel.setAnim("Closed");
     }
 
@@ -54,5 +56,6 @@ public class Door{
      */
     public void setAnim(String anim) {
         doorChannel.setAnim(anim);
+        doorChannel.setLoopMode(LoopMode.DontLoop);
     }
 }

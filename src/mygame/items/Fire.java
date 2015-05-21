@@ -406,4 +406,8 @@ public class Fire {
     public void setY(float y) {
         this.y = y;
     }
+    
+    public Vector3f getTranslation(){
+        return new Vector3f(x, y, z);
+    }
 }

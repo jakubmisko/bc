@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package mygame.jadex.npc.plans;
 
 import jadex.bdi.runtime.Plan;
@@ -15,7 +11,9 @@ import mygame.jadex.help.IAgentProps;
  * @author jakub
  */
 public class ObservePlan extends Plan {
-
+    /**
+     * Plán osoby pred domom, ktorá si všimne horiaci dom a pozoruje čo sa stane
+     */
     @Override
     public void body() {
         AgentProps p = (AgentProps) getBeliefbase().getBelief("shared").getFact();

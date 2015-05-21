@@ -1,21 +1,19 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package mygame.jadex.npc.plans;
 
 import jadex.bdi.runtime.IGoal;
 import jadex.bdi.runtime.Plan;
 import mygame.jadex.communication.AgentProps;
 import mygame.jadex.help.IAgentProps;
-import sk.tuke.fei.bdi.emotionalengine.component.Engine;
 
 /**
  *
  * @author jakub
  */
 public class CryPlan extends Plan {
-
+    /**
+     * Plán, ktorý sa spustí pri dosiahnutí kritickej hodnoty strachu pri úteku 
+     * pred ohňom
+     */
     @Override
     public void body() {
         AgentProps p = (AgentProps) getBeliefbase().getBelief("shared").getFact();

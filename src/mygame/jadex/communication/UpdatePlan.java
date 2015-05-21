@@ -16,6 +16,10 @@ public class UpdatePlan extends Plan {
     //private Communicator com = null;
     private AgentProps agent;
 
+    /**
+     * plán, ktorý aktualizuje <beliefs> v adf agenta na základe kolekcie
+     * zdieľaných objektov
+     */
     @Override
     public void body() {
         IBeliefbase base  = getBeliefbase();
@@ -28,16 +32,4 @@ public class UpdatePlan extends Plan {
             }
         }
     }
-    /*
-    private void update(){
-        
-        getBeliefbase().getBelief(IAgentProps.Health).setFact(Casting.toInt(agent.get(IAgentProps.Health)));
-        getBeliefbase().getBelief(IAgentProps.NearPlayer).setFact(Casting.toBool(agent.get(IAgentProps.NearPlayer)));
-        getBeliefbase().getBelief(IAgentProps.Saved).setFact(Casting.toBool(agent.get(IAgentProps.Saved)));
-        getBeliefbase().getBelief(IAgentProps.NearFire).setFact(Casting.toInt(agent.get(IAgentProps.NearFire)));
-        getBeliefbase().getBelief(IAgentProps.Follow).setFact(Casting.toInt(agent.get(IAgentProps.Follow)));
-       
-        System.out.println("[help] beliefs updated");
-    }
-*/
 }

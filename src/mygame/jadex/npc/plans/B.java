@@ -12,7 +12,10 @@ import mygame.jadex.communication.AgentProps;
  * @author jakub
  */
 public class B extends Plan {
-
+    /**
+     * Plán, ktorý vypíše na štandardný výstup hodnoty uložené v kolekcii 
+     * objektov zdieľaných medzi Jadexom a JME
+     */
     @Override
     public void body() {
         while(true){

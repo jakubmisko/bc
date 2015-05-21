@@ -10,7 +10,7 @@ import jadex.commons.future.IFuture;
 import jadex.commons.future.ThreadSuspendable;
 
 /**
- * Starter class for jadex agents
+ * Spúšťač platformy systému Jadex
  */
 public class JadexStarter implements Runnable {
     private IExternalAccess platform;
@@ -27,8 +27,7 @@ public class JadexStarter implements Runnable {
 
     /**
      *
-     * @param components Array of paths to jadex agents which needs to be
-     * created
+     * @param components Pole reťazcov s cestami k agentom, ktoré majú byť vytvorené
      */
     public JadexStarter(String components[]) {
         this.components = components;
@@ -40,16 +39,16 @@ public class JadexStarter implements Runnable {
     }
 
     /**
-     * Method that disable jadex agent
+     * Odstráni vytvoreného agenta zo spustenej platformy
      *
-     * @param id ID of already running agent
+     * @param id ID agenta, ktorý ma byť odstránený
      */
     public void killAgent(IComponentIdentifier id) {
         cms.destroyComponent(id);
     }
 
     /**
-     * Method that create components
+     * Metóda vytvarájúca agentov, po vytvorení uloží id do poľa
      */
     public void run() {
         int identifier = 0;
@@ -60,9 +59,10 @@ public class JadexStarter implements Runnable {
             System.out.println("Started component: " + identifiers[identifier++]);
         }
     }
-
+    /**
+     * Vypnutie platformy
+     */
     public void shutDown() {
         platform.shutdownNFPropertyProvider();
-
     }
 }

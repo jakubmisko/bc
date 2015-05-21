@@ -6,19 +6,15 @@ package mygame.characters;
 
 import com.jme3.animation.AnimChannel;
 import com.jme3.animation.AnimControl;
+import com.jme3.bounding.BoundingVolume;
 import com.jme3.bullet.control.BetterCharacterControl;
 import com.jme3.collision.CollisionResults;
-import com.jme3.input.FlyByCamera;
-import com.jme3.math.FastMath;
-import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import mygame.items.Fire;
 
 /**
@@ -27,7 +23,7 @@ import mygame.items.Fire;
  */
 public abstract class Character {
 
-    private ArrayList<Spatial> walls;
+    private ArrayList<Spatial> obstacles;
     private float hp;
     private Node node;
     private BetterCharacterControl control;
@@ -44,8 +40,8 @@ public abstract class Character {
         hp = 100;
     }
 
-    public void setWalls(ArrayList<Spatial> walls) {
-        this.walls = walls;
+    public void setObstacles(ArrayList<Spatial> obstacles) {
+        this.obstacles = obstacles;
     }
 
     public boolean isFollowing() {
@@ -223,6 +219,7 @@ public abstract class Character {
     }
 
     public boolean nearFire(float distance, List<Fire> fire) {
+        distance = fire.get(0).fireNode().getStartSize() + distance - 1;
         Vector3f me = node.getLocalTranslation();
         for (Fire f : fire) {
             Vector3f fireLoc = f.fireNode().getLocalTranslation();
@@ -307,7 +304,22 @@ public abstract class Character {
         if (!position.equals(new Vector3f(0, y, 0))) {
             control.setViewDirection(position);
         }
-        
+        if (isNearObstacle(1.0f)) {
+           // System.out.println("stena #");
+           turnAround();
+        }
+    }
+
+    private boolean isNearObstacle(float distance) {
+        for (Spatial wall : obstacles) {
+            BoundingVolume b = wall.getWorldBound();
+            CollisionResults result = new CollisionResults();
+            node.collideWith(b, result);
+            if (result.size() > 0 && result.getClosestCollision().getDistance() <= distance) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void turnAround() {
@@ -319,7 +331,10 @@ public abstract class Character {
         control.setWalkDirection(dir);
         control.setViewDirection(dir);
     }
-
+    /**
+     * clovek sa otoci a utecie od ohna
+     * @param speed rychlost pohybu
+     */
     public void runFromFire(float speed) {
         if (!busy) {
             animacia.setAnim("nearFire");
@@ -355,6 +370,8 @@ public abstract class Character {
             control.setViewDirection(new Vector3f(0, 0, -1));
         }
     }
-
+    /**
+     * specificke spravanie 
+     */
     public abstract void action();
 }

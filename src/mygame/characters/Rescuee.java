@@ -4,7 +4,6 @@
  */
 package mygame.characters;
 
-import com.jme3.font.BitmapText;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Node;
 import java.util.List;
@@ -18,7 +17,7 @@ import mygame.jadex.help.IAgentProps;
  * @author jakub
  */
 public class Rescuee extends Character {
-    
+    private boolean alive;
     private Character player;
     private Node gui;
     private List<Fire> fire;
@@ -32,56 +31,66 @@ public class Rescuee extends Character {
     private final String HAPPY_ANIM = "happy";
     private final String REJECT_ANIM = "dontSaveMe";
     private final Vector3f ZERO = new Vector3f(0f, 0f, 0f);
-    
+
     public Rescuee(String meno, AgentProps jadex) {
         super(meno);
+        alive = true;
         this.jadex = jadex;
     }
-    
+
     public List<Fire> getFire() {
         return fire;
     }
-    
+
     public void setFire(List<Fire> fire) {
         this.fire = fire;
     }
-    
+
     public Node getGui() {
         return gui;
     }
-    
+
     public void setGui(Node gui) {
         this.gui = gui;
     }
-    
+
     public Character getPlayer() {
         return player;
     }
-    
+
     public void setPlayer(Character player) {
         this.player = player;
     }
-    
+
     @Override
     public void action() {
 //        System.out.println("walking =" + jadex.get(IAgentProps.Walking));
 //        System.out.println("fire="+jadex.get(IAgentProps.NearFire));
         if (getNode().getLocalTranslation().getZ() < 6 && getHp() > 0) {
-            
+
             if (nearFire(2, fire)) {
-                runFromFire(Casting.toFloat(jadex.get(IAgentProps.Speed)));
-                
-                decreaseHp(2f);
+
                 if (!Casting.toBool(jadex.get(IAgentProps.NearFire))
                         && Casting.toBool(jadex.get(IAgentProps.Walking))) {
                     jadex.put(IAgentProps.NearFire, true);
                     jadex.put(IAgentProps.Walking, false);
-                    
+
                 }
                 //System.out.println("blizko ohna " + getHp());
                 if (Casting.toBool(jadex.get(IAgentProps.Follow))) {
                     jadex.put(IAgentProps.Follow, false);
                 }
+                if (!Casting.toBool(jadex.get(IAgentProps.GiveUp))) {
+                    runFromFire(Casting.toFloat(jadex.get(IAgentProps.Speed)));
+                } else {
+                    getControl().setWalkDirection(ZERO);
+                    if (!getAnimation().equals(STAND_ANIM)) {
+                        setAnimation(STAND_ANIM);
+                    }
+                }
+
+                decreaseHp(2f);
+                System.out.println("hp "+getName()+" "+getHp());
                 //System.out.println("blizko ohna");
             } else if (!nearFire(3, fire)) {
                 setBusy(false);
@@ -96,13 +105,13 @@ public class Rescuee extends Character {
                     if (!getAnimation().equals(FEAR_ANIM) && Casting.toBool(jadex.get(IAgentProps.Cry))) {
                         setAnimation(FEAR_ANIM);
                         // System.out.println("fear anim");
-                    } else if (!getName().endsWith("Jr") 
-                            &&!getAnimation().equals(REJECT_ANIM)
+                    } else if (!getName().endsWith("Jr")
+                            && !getAnimation().equals(REJECT_ANIM)
                             && Casting.toBool(jadex.get(IAgentProps.NearPlayer))
                             && !Casting.toBool(jadex.get(IAgentProps.ChildSafe))) {
                         setAnimation(REJECT_ANIM);
                     }
-                    
+
                 } else if (Casting.toBool(jadex.get(IAgentProps.Follow))) {
                     //System.out.println("[game] follow");
                     follow(player, Casting.toFloat(jadex.get(IAgentProps.Speed)));
@@ -145,9 +154,9 @@ public class Rescuee extends Character {
                     setAnimation(HAPPYj_ANIM);
                 } else {
                     setAnimation(HAPPY_ANIM);
-            
+
                 }
-            } else if (getHp() < 0) {
+            } else if (getHp() <= 0 && alive) {
                 getControl().setWalkDirection(new Vector3f(0, 0, 0));
                 jadex.put(IAgentProps.Follow, false);
                 jadex.put(IAgentProps.NearFire, false);
@@ -155,7 +164,8 @@ public class Rescuee extends Character {
                 jadex.put(IAgentProps.NearAgent, false);
                 jadex.put(IAgentProps.Walking, false);
                 jadex.put(IAgentProps.Health, 0);
-                System.out.println("[game] mrtvy");
+                // System.out.println("[game] mrtvy");
+                alive = false;
             }
         }
     }

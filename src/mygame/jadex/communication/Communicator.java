@@ -28,14 +28,10 @@ public class Communicator {
     }
 
     public void addAgent(AgentProps newOne) {
-        synchronized (agents) {
             agents.put(newOne.getName(), newOne);
-        }
     }
 
     public AgentProps getAgent(String name) {
-        synchronized (agents) {
             return agents.get(name);
-        }
     }
 }

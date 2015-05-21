@@ -67,6 +67,9 @@
         <belief name="walk" class="Boolean">
             <fact>true</fact>
         </belief>
+        <belief name="give_up" class="Boolean">
+            <fact>false</fact>
+        </belief>
     </beliefs>
 
     <!--Definicie cielov.-->
@@ -155,12 +158,16 @@
                 $beliefbase.save == false
                 &amp;&amp;
                 $beliefbase.hp != 0
+                &amp;&amp;
+                $beliefbase.give_up == false
             </creationcondition>
             <targetcondition language="jcl">
                 $beliefbase.save == true
             </targetcondition>
             <dropcondition language="jcl">
                 $beliefbase.nearP == false
+                ||
+                $beliefbase.give_up == false
             </dropcondition>
         </achievegoal>
         
@@ -181,7 +188,7 @@
             <parameter name="desirability" class="Boolean">
                 <value>(Math.random() * 0.5) + 0.4</value>
             </parameter>
-             <!-- Personality parameters -->
+            <!-- Personality parameters -->
             <parameter name="temper" class="String">
                 <value> $beliefbase.myTemper </value> 
             </parameter>
@@ -190,6 +197,8 @@
             </parameter>
             <creationcondition language="jcl">
                 $beliefbase.fire == true
+                &amp;&amp;
+                $beliefbase.give_up == false
             </creationcondition>
             <dropcondition language="jcl">
                 $beliefbase.follow == true
@@ -233,6 +242,8 @@
                 $beliefbase.save == true
                 ||
                 $beliefbase.hp == 0
+                ||
+                $beliefbase.give_up == true
             </dropcondition>
          
         </achievegoal>
@@ -269,7 +280,7 @@
             <parameter name="desirability" class="Boolean">
                 <value>(Math.random() * 0.5) + 0.2</value>
             </parameter>
-             <!-- Personality parameters -->
+            <!-- Personality parameters -->
             <parameter name="temper" class="String">
                 <value> $beliefbase.myTemper </value> 
             </parameter>
@@ -285,6 +296,29 @@
                 ||
                 $beliefbase.hp == 0
             </dropcondition>
+        </performgoal>
+       
+        <performgoal name="give_up">
+            <parameter name="emotional" class="Boolean">
+                <value>true</value>
+            </parameter>
+            <parameter name="probability" class="String">
+                <value>(Math.random() * 0.2) + 0.1</value>
+            </parameter>
+            <parameter name="desirability" class="Boolean">
+                <value>(Math.random() * 0.5) + 0.2</value>
+            </parameter>
+            
+            <!-- Personality parameters -->
+            <parameter name="temper" class="String">
+                <value> $beliefbase.myTemper </value> 
+            </parameter>
+            <parameter name="composure" class="String">      
+                <value>$beliefbase.myComposure</value>
+            </parameter>
+            <creationcondition language="jcl">
+                $beliefbase.give_up
+            </creationcondition>
         </performgoal>
        
     </goals>
@@ -446,6 +480,27 @@
             <body class="RejectPlan"/>
             <trigger>
                 <goal ref="reject_follow"/>
+            </trigger>
+        </plan>
+        <plan name="giveup">
+            <parameter name="emotional" class="Boolean">
+                <value>true</value>
+            </parameter>
+            <parameter name="approval" class="String" >
+                <value>(Math.random() * 0.5) + 0.1</value>
+            </parameter>
+            <parameter name="desirability" class="String" >
+                <value>(Math.random() * 0.5) + 0.1</value>
+            </parameter>
+            <parameter name="temper" class="String">
+                <value> $beliefbase.myTemper </value> 
+            </parameter>
+            <parameter name="composure" class="String">      
+                <value>$beliefbase.myComposure</value>
+            </parameter>
+            <body class="GiveUpPlan"/>
+            <trigger>
+                <goal ref="give_up"/>
             </trigger>
         </plan>
         <!-- 

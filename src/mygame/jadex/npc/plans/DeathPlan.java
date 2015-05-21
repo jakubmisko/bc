@@ -5,14 +5,15 @@
 package mygame.jadex.npc.plans;
 
 import jadex.bdi.runtime.Plan;
-import mygame.jadex.communication.AgentProps;
 
 /**
  *
  * @author jakub
  */
 public class DeathPlan extends Plan{
-
+    /**
+     * Plán spustený pri klesnutí hodnoty života na 0
+     */
     @Override
     public void body() {
         System.out.println("zomrel som :( #"+getComponentName());

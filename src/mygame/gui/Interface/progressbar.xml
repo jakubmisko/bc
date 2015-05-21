@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<nifty xmlns="http://nifty-gui.lessvoid.com/nifty-gui">
+
+    <!-- this is our nifty little progressbar control -->
+    <controlDefinition name="progressbar1">
+        <image filename="mygame/progressbar-outer.png" imageMode="resize:15,2,15,15,15,2,15,2,15,2,15,15"
+               childLayout="absolute">
+            <image id="progress1" x="0" y="0" filename="mygame/progressbar-inner.png" width="32px" height="100%"
+                   imageMode="resize:15,2,15,15,15,2,15,2,15,2,15,15"/>
+            <text id="#progress-text" font="Fonts/verdana-small-regular.fnt" text="Jozko" textHAlign="right" textVAlign="center"
+                  width="100%" height="100%" x="0" y="0" color="#000000"/>
+        </image>
+    </controlDefinition>
+    <controlDefinition name="progressbar2">
+        <image filename="mygame/progressbar-outer.png" imageMode="resize:15,2,15,15,15,2,15,2,15,2,15,15"
+               childLayout="absolute">
+            <image id="progress2" x="0" y="0" filename="mygame/progressbar-inner.png" width="32px" height="100%"
+                   imageMode="resize:15,2,15,15,15,2,15,2,15,2,15,15"/>
+            <text id="#progress-text" font="Fonts/verdana-small-regular.fnt" text="Jozko jr." textHAlign="right" textVAlign="center"
+                  width="100%" height="100%" x="0" y="0" color="#000000"/>
+        </image>
+    </controlDefinition>
+    <controlDefinition name="progressbar3">
+        <image filename="mygame/progressbar-outer.png" imageMode="resize:15,2,15,15,15,2,15,2,15,2,15,15"
+               childLayout="absolute">
+            <image id="progress3" x="0" y="0" filename="mygame/progressbar-inner.png" width="32px" height="100%"
+                   imageMode="resize:15,2,15,15,15,2,15,2,15,2,15,15"/>
+            <text id="#progress-text" font="Fonts/verdana-small-regular.fnt" text="Anka" textHAlign="right" textVAlign="center"
+                  width="100%" height="100%" x="0" y="0" color="#000000"/>
+        </image>
+    </controlDefinition>
+    <controlDefinition name="progressbar4" >
+        <image filename="mygame/progressbar-outer.png" imageMode="resize:15,2,15,15,15,2,15,2,15,2,15,15"
+               childLayout="absolute">
+            <image id="progress4" x="0" y="0" filename="mygame/progressbar-inner.png" width="32px" height="100%"
+                   imageMode="resize:15,2,15,15,15,2,15,2,15,2,15,15"/>
+            <text id="#progress-text" font="Fonts/verdana-small-regular.fnt" text="Player" textHAlign="right" textVAlign="center"
+                  width="100%" height="100%" x="0" y="0" color="#000000"/>
+        </image>
+    </controlDefinition>
+
+    <!-- a simple screen -->
+    <screen id="start" controller="mygame.ProgressbarControl">
+        <layer id="layer" childLayout="vertical" >
+            <control id="my-progress1" name="progressbar1" align="left" valign="top" width="400px" height="32px"/>
+            <control id="my-progress2" name="progressbar2" align="left" valign="top" width="400px" height="32px"/>
+            <control id="my-progress3" name="progressbar3" align="left" valign="top" width="400px" height="32px"/>
+        
+        </layer>
+  
+        <layer id="bot" childLayout="horizontal" valign="bottom" width="100%">
+            <control id="my-progress4" name="progressbar4" align="left" valign="bottom" width="400px" height="32px"/>
+        </layer>
+    </screen>
+</nifty>

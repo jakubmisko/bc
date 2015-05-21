@@ -17,14 +17,17 @@ import sk.tuke.fei.bdi.emotionalengine.res.R;
  * @author jakub
  */
 public class WanderPlan extends Plan {
-
+    /**
+     * Plán náhodného pohybu, podľa emócii sa nastaví rýchlosť pohybu a pri 
+     * vysokej hodnote strachu človek upadne do šoku čím sa vytvorí cieľ Cry
+     */
     @Override
     public void body() {
         AgentProps p = (AgentProps) getBeliefbase().getBelief("shared").getFact();
         p.put(IAgentProps.Walking, true);
         Engine e = (Engine) getBeliefbase().getBelief("emotional_engine").getFact();
         while (true) {
-            if (e.getElement("run_from_fire", R.GOAL).getEmotion(R.FEAR).getIntensity() > 0.25
+            if (!getComponentName().equals("janko") && e.getElement("run_from_fire", R.GOAL).getEmotion(R.FEAR).getIntensity() > 0.25
                     && !Casting.toBool(p.get(IAgentProps.Cry))) {
                 p.put(IAgentProps.Walking, false);
                 IGoal cry = createGoal("cry");

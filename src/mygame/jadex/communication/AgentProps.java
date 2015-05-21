@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package mygame.jadex.communication;
 
 import jadex.commons.SimplePropertyChangeSupport;
@@ -10,7 +6,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- *
+ * Trieda so zdieľanými vlastnosťami agenta
  * @author jakub
  */
 public class AgentProps extends ConcurrentHashMap<String, Object> {
@@ -20,20 +16,37 @@ public class AgentProps extends ConcurrentHashMap<String, Object> {
 
     public AgentProps(){
         this("");
-    }
+    }   
+    /**
+     * Vytvorí agenta a priradí mu meno 
+     * @param name meno nového agenta
+     */
     public AgentProps(String name) {
         this.name = name;
         this.pcs = new SimplePropertyChangeSupport(this);
     }
-    
+    /**
+     * nastavenie nového mena
+     * @param name meno
+     */
     public void setName(String name){
         this.name = name;
     }
+    /**
+     * vráti meno agenta
+     * @return 
+     */
     public String getName() {
         return name;
     }
 
-
+    /**
+     * Uloží objekt pod daným kľúčom do HashMapy
+     * @param type kľúč k vlastnosti agenta 
+     * @param ob hodnota vlastnosti
+     * @return vráti predchádzajúcu hodnotu uloženú pod daným kľúčom, ak sa nenachádza
+     * tak null
+     */
     @Override
     public Object put(String type, Object ob) {
         
@@ -45,7 +58,7 @@ public class AgentProps extends ConcurrentHashMap<String, Object> {
     }
 
     /**
-     *
+     *  Získanie objektu na základe kľúča
      * @param type kluc k objektu
      * @return objekt triedy java.lang.Object, ktory treba pretypovat
      */
@@ -65,36 +78,11 @@ public class AgentProps extends ConcurrentHashMap<String, Object> {
         //return super.contains(type);
         return super.containsKey(type);
     }
-    /*
-     public boolean getBool(String type) throws ClassCastException{
-     synchronized(shared){
-     Object o = shared.get(type);
-     if(o instanceof Boolean){
-     return ((Boolean)o).booleanValue();
-     }
-     throw new ClassCastException();
-     }
-     }
-    
-     public Object getUpdate(String type){
-     synchronized(shared){
-     if(updated && shared.containsKey(type)){
-     updated = false;
-     return shared.get(type);
-     }
-     return null;
-     }
-     }
-     * 
-
-    public boolean needUpdate() {
-        if (updated) {
-            updated = false;
-            return true;
-        }
-        return false;
-    }
-*/
+    /**
+     * Odstáni objekt uložený v kolekcii
+     * @param type kľúč k objektu
+     * @return vráti hodnotu, kotorá bola na daný kľúč namapovaná
+     */
     public Object remove(String type) {
         return super.remove(type);
     }

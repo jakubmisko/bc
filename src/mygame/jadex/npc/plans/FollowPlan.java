@@ -15,7 +15,9 @@ import mygame.jadex.help.IAgentProps;
  * @author jakub
  */
 public class FollowPlan extends Plan {
-
+    /**
+     * Plán následovania hráča 
+     */
     @Override
     public void body() {
         // getBeliefbase().getBelief("follow").setFact(true);;

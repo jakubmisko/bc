@@ -1,8 +1,0 @@
-Material My Material : Common/MatDefs/Light/Lighting.j3md {
-     MaterialParameters {
-        NormalMap : Models/okoloiduci/textury a materialy/male02_diffuse_black.png
-        DiffuseMap : Models/okoloiduci/textury/male02_diffuse_black.png
-     }
-    AdditionalRenderState {
-    }
-}
